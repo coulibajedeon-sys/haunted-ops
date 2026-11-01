@@ -2,35 +2,123 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Séance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=IM+Fell+English&display=swap" rel="stylesheet">
   <style>
-    body { background:#0b0a12; color:#e8e0ff; font-family:serif;
-           max-width:600px; margin:5vh auto; padding:0 1rem; }
-    h1 { text-align:center; }
-    input { padding:.6rem; width:70%; }
-    button { padding:.6rem 1rem; cursor:pointer; }
-    li { margin:.8rem 0; display:flex; justify-content:space-between; }
+    :root {
+      --bg: #07060d;
+      --text: #ece6ff;
+      --glow: #ffb347;
+      --spirit: #b9a6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: radial-gradient(ellipse at 50% 0%, #1b1530 0%, var(--bg) 70%);
+      color: var(--text);
+      font-family: "IM Fell English", Georgia, serif;
+      font-size: 1.15rem;
+      overflow-x: hidden;
+    }
+    /* Brouillard animé */
+    .fog {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(40% 30% at 20% 80%, rgba(185,166,255,.12), transparent 70%),
+        radial-gradient(35% 25% at 80% 70%, rgba(185,166,255,.10), transparent 70%);
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    @keyframes drift {
+      from { transform: translateX(-4%) scale(1); }
+      to   { transform: translateX(4%) scale(1.1); }
+    }
+    main { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 6vh 1.2rem 4rem; }
+    h1 {
+      font-family: "Cinzel Decorative", serif;
+      text-align: center; font-size: clamp(2.2rem, 7vw, 3.4rem);
+      margin: 0 0 .3rem;
+      color: #fff3d6;
+      text-shadow: 0 0 12px var(--glow), 0 0 32px rgba(255,179,71,.5);
+      animation: flicker 4s infinite;
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; } 45% { opacity: .92; } 50% { opacity: .75; } 55% { opacity: .95; }
+    }
+    .tagline { text-align: center; opacity: .75; margin-bottom: 2rem; font-style: italic; }
+    form.summon { display: flex; gap: .6rem; }
+    input {
+      flex: 1; padding: .8rem 1rem; font: inherit; color: var(--text);
+      background: rgba(255,255,255,.05); border: 1px solid rgba(185,166,255,.4);
+      border-radius: 10px;
+    }
+    input:focus { outline: 2px solid var(--glow); }
+    button {
+      font: inherit; cursor: pointer; padding: .8rem 1.1rem; border-radius: 10px;
+      color: #1a1020; background: var(--glow); border: none;
+      box-shadow: 0 0 16px rgba(255,179,71,.45);
+      transition: transform .15s;
+    }
+    button:hover, button:focus-visible { transform: translateY(-2px); }
+    ul { list-style: none; padding: 0; margin: 2rem 0 0; }
+    li {
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      margin: .9rem 0; padding: .9rem 1.1rem;
+      background: rgba(185,166,255,.08);
+      border: 1px solid rgba(185,166,255,.25); border-radius: 14px;
+      animation: float 4s ease-in-out infinite alternate, appear .6s ease-out;
+    }
+    li:nth-child(even) { animation-delay: -2s, 0s; }
+    @keyframes float { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+    @keyframes appear { from { opacity: 0; filter: blur(6px); } to { opacity: 1; filter: blur(0); } }
+    li.banished { animation: vanish .8s ease-in forwards; }
+    @keyframes vanish {
+      to { opacity: 0; transform: translateY(-60px) scale(.9); filter: blur(10px); }
+    }
+    li form button { background: transparent; color: var(--spirit); border: 1px solid var(--spirit); box-shadow: none; }
+    .empty { text-align: center; opacity: .7; font-style: italic; margin-top: 3rem; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-  <h1>👻 Séance</h1>
+  <div class="fog" aria-hidden="true"></div>
+  <main>
+    <h1>👻 Séance</h1>
+    <p class="tagline">Summon your tasks. Banish them to the beyond.</p>
 
-  <form method="post" action="/summon">
-    <input name="title" placeholder="Summon a new spirit..." required>
-    <button type="submit">Summon</button>
-  </form>
+    <form class="summon" method="post" action="/summon">
+      <input name="title" placeholder="Name a spirit to summon..." aria-label="New task" required>
+      <button type="submit">Summon</button>
+    </form>
 
-  <ul>
-    {% for task in tasks %}
-      <li>
-        <span>👻 {{ task.title }}</span>
-        <form method="post" action="/banish/{{ task.id }}">
-          <button type="submit">Banish</button>
-        </form>
-      </li>
-    {% else %}
-      <p>No spirits here... for now.</p>
-    {% endfor %}
-  </ul>
+    <ul>
+      {% for task in tasks %}
+        <li>
+          <span>👻 {{ task.title }}</span>
+          <form method="post" action="/banish/{{ task.id }}" class="banish-form">
+            <button type="submit">Banish</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+    {% if not tasks %}
+      <p class="empty">The house is quiet... for now.</p>
+    {% endif %}
+  </main>
+
+  <script>
+    document.querySelectorAll(".banish-form").forEach(function (form) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var li = form.closest("li");
+        li.classList.add("banished");
+        setTimeout(function () { form.submit(); }, 750);
+      });
+    });
+  </script>
 </body>
 </html>
