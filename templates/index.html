@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Séance</title>
+  <style>
+    body { background:#0b0a12; color:#e8e0ff; font-family:serif;
+           max-width:600px; margin:5vh auto; padding:0 1rem; }
+    h1 { text-align:center; }
+    input { padding:.6rem; width:70%; }
+    button { padding:.6rem 1rem; cursor:pointer; }
+    li { margin:.8rem 0; display:flex; justify-content:space-between; }
+  </style>
+</head>
+<body>
+  <h1>👻 Séance</h1>
+
+  <form method="post" action="/summon">
+    <input name="title" placeholder="Summon a new spirit..." required>
+    <button type="submit">Summon</button>
+  </form>
+
+  <ul>
+    {% for task in tasks %}
+      <li>
+        <span>👻 {{ task.title }}</span>
+        <form method="post" action="/banish/{{ task.id }}">
+          <button type="submit">Banish</button>
+        </form>
+      </li>
+    {% else %}
+      <p>No spirits here... for now.</p>
+    {% endfor %}
+  </ul>
+</body>
+</html>
