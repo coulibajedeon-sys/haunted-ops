@@ -1,0 +1,146 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Rewrite `geom` constants and `arcAngle`/`arcPosition` for two rows": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793988727654
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793988972676
+      }
+    ],
+    "1. Rework Layout_Geometry in `static/board.js` for the two-row model": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793988972927
+      }
+    ],
+    "2. Split the glyph markup into a letter arc and a digit row in `templates/index.html`": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793988979244
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989087440
+      }
+    ],
+    "1.2 Write NEW optional pure-geometry property tests": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793988980348
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989088160
+      }
+    ],
+    "3. Add CSS glyph placement matching the geometry in `templates/index.html`": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989093954
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989276159
+      }
+    ],
+    "4. Checkpoint — verify layout and planchette alignment in the browser": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989428369
+      }
+    ],
+    "5. Redesign the Planchette as inline SVG in `templates/index.html`": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989434114
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989620155
+      }
+    ],
+    "6. Fix typography for glyphs and markers in `templates/index.html`": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989624772
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989743484
+      }
+    ],
+    "7. Apply the aged wooden spirit-board look in `templates/index.html`": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793989749101
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793990168708
+      }
+    ],
+    "8. Add corner candlelight in `templates/index.html`": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793990175679
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793990666857
+      }
+    ],
+    "9. Remove the duplicate ghost emoji from the title in `templates/index.html`": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793990673136
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793990791895
+      }
+    ],
+    "10. Regression and verification": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793990797612
+      },
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793991351771
+      }
+    ],
+    "11. Final checkpoint — confirm the finished look": [
+      {
+        "executionId": "2d3464e8-2e62-44e7-af71-bfea7853bf55",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793991392283
+      }
+    ]
+  }
+}

@@ -120,19 +120,27 @@
        fonds sont translucides (rgba) ou transparents pour laisser voir la
        couche .fog derrière le plateau (Req 6.4).
 
-       GÉOMÉTRIE — alignement avec la planchette (static/board.js) :
-       board.js arcPosition(index, 36) calcule les centres des glyphes dans
-       un espace 600x600 : CENTER_X=300, CENTER_Y=300, RADIUS=260, l'angle
-       balayant START_ANGLE=π (gauche) → END_ANGLE=2π (droite), en coords SVG
-       (x vers la droite, y vers le BAS). Sin(angle) est négatif sur ]π,2π[,
-       donc les glyphes dessinent un arc EN HAUT (y de 300 vers ~40 au milieu).
+       GÉOMÉTRIE — alignement avec la planchette (static/board.js), MODÈLE À
+       DEUX RANGÉES. board.js arcPosition(index, 36) calcule les centres des
+       glyphes dans un espace STAGE_W×STAGE_H = 700×380, en coords SVG (x vers
+       la droite, y vers le BAS), par région :
+         - LETTRES (index 0..25) sur l'ARC des lettres :
+             LETTER_COUNT=26 → divisor 25
+             ARC_START_ANGLE=π·1.08, ARC_END_ANGLE=π·1.92 (balayage ]π,2π[,
+             sin négatif → arc EN HAUT), ARC_RADIUS=300,
+             ARC_CENTER=(350,330).
+             angle = 1.08π + (1.92π−1.08π)·(i/25) ;
+             x = 350 + 300·cos(angle) ; y = 330 + 300·sin(angle).
+         - CHIFFRES (index 26..35 → d=0..9) sur une RANGÉE DROITE :
+             DIGIT_COUNT=10 → divisor 9, DIGIT_ROW_Y=300,
+             DIGIT_ROW_X_START=120, DIGIT_ROW_X_END=580.
+             x = 120 + (580−120)·(d/9) ; y = 300.
        Le contrôleur déplace la planchette via style.transform =
        "translate(xpx, ypx)" avec CES pixels exacts. On place donc chaque
        glyphe au MÊME centre en CSS, dans le MÊME repère, via les fonctions
-       trigonométriques CSS cos()/sin() (approche A). Formule identique à
-       board.js : angle = π + π * (--i / 35), left = 300 + 260*cos(angle),
-       top = 300 + 260*sin(angle), puis translate(-50%,-50%) pour centrer le
-       bouton sur ce point. */
+       trigonométriques CSS cos()/sin() (approche A) pour les lettres et la
+       formule linéaire pour les chiffres, puis translate(-50%,-50%) pour
+       centrer le bouton sur ce point. */
 
     /* IMPORTANT — nesting du markup (tâche 8.1) : la <svg class="planchette">
        est un ENFANT DIRECT de .ouija et un FRÈRE de .arc (elle n'est PAS dans
@@ -150,16 +158,91 @@
        préservant leur alignement. Le centre reste (300,300). */
     .ouija {
       position: relative;
-      width: 600px;
-      height: 320px;
+      width: 700px;
+      height: 380px;
       max-width: 100%;
       margin: 0 auto 1rem;
-      background: rgba(185,166,255,.04);
-      border: 1px solid rgba(185,166,255,.18);
-      border-radius: 18px;
-      box-shadow: 0 0 28px rgba(185,166,255,.10), inset 0 0 40px rgba(7,6,13,.5);
+      /* Surface bois vieilli — UNIQUEMENT des dégradés CSS, aucun asset externe
+         (Req 4.1). Pile de trois couches :
+           1) fines stries verticales serrées (veines du bois, 92°) ;
+           2) bandes plus larges et douces (92°→88° pour un léger moiré) ;
+           3) base radiale « bois profond » (brun chaud au centre-haut vers
+              un brun très sombre aux bords) qui donne le corps du plateau.
+         La base radiale est majoritairement opaque : c'est le CORPS du plateau
+         (acceptable, Req 9.4 concerne la brume AUTOUR du plateau borné, pas à
+         travers lui). Un halo esprit discret reste dans box-shadow (Req 4.4). */
+      background:
+        repeating-linear-gradient(92deg,
+          rgba(42,26,14,.55) 0px, rgba(42,26,14,.55) 2px,
+          rgba(26,16,9,.55) 2px,  rgba(26,16,9,.55) 5px),
+        repeating-linear-gradient(88deg,
+          rgba(60,38,20,.25) 0px, rgba(60,38,20,.25) 9px,
+          rgba(30,19,10,.25) 9px, rgba(30,19,10,.25) 18px),
+        radial-gradient(120% 80% at 50% 20%, #3a2614 0%, #241608 55%, #160d05 100%);
+      /* Bordure ornée (Req 4.3) : double liseré bois + cadre inset et vignette
+         sombre, plus un halo esprit extérieur via --spirit/--glow. Les
+         flourishes d'angle sont dessinés en ::before/::after (purement
+         décoratifs, sans image). */
+      border: 3px double #6b4a22;
+      border-radius: 20px;
+      box-shadow:
+        inset 0 0 0 6px rgba(40,26,12,.65),
+        inset 0 0 40px rgba(0,0,0,.6),
+        0 0 28px rgba(185,166,255,.10);
       transform: scale(var(--board-scale, 1));
       transform-origin: top center;
+    }
+    /* Corner candlelight (tâche 8, Req 5.1–5.3). Couche décorative DERRIÈRE
+       les glyphes : position absolue couvrant tout le stage, z-index:0, et
+       pointer-events:none (ne bloque jamais les clics, ne couvre pas les
+       glyphes qui sont à z-index:1). border-radius: inherit → suit les coins
+       arrondis du plateau. Les quatre lueurs d'angle sont peintes par
+       `background` (radial-gradients ambrés via la teinte de --glow #ffb347),
+       donc présentes dès le CHARGEMENT (Req 5.1). L'animation candle-flicker
+       les fait vaciller lorsque le mouvement est autorisé (Req 5.2). Aucun
+       media query ajouté : la règle GLOBALE @media (prefers-reduced-motion:
+       reduce) plus bas force `animation: none !important`, ce qui stoppe le
+       vacillement SANS effacer le `background` → lueur STATIQUE sous mouvement
+       réduit (Req 5.3). Aucun asset externe. */
+    .ouija .candles {
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      border-radius: inherit;   /* match the board's rounded corners */
+      background:
+        radial-gradient(60px 60px at 6% 8%,  rgba(255,179,71,.45), transparent 70%),
+        radial-gradient(60px 60px at 94% 8%, rgba(255,179,71,.45), transparent 70%),
+        radial-gradient(60px 60px at 6% 92%, rgba(255,179,71,.40), transparent 70%),
+        radial-gradient(60px 60px at 94% 92%,rgba(255,179,71,.40), transparent 70%);
+      animation: candle-flicker 2.4s ease-in-out infinite;
+    }
+    @keyframes candle-flicker {
+      0%, 100% { opacity: .85; filter: brightness(1); }
+      25%      { opacity: .62; filter: brightness(.9); }
+      50%      { opacity: .95; filter: brightness(1.12); }
+      75%      { opacity: .7;  filter: brightness(.95); }
+    }
+
+    /* Flourishes d'angle — petits équerres dorées (contour uniquement, aucune
+       image). Quatre coins pour un cadre symétrique et soigné. ::before pose
+       les coins HAUT-GAUCHE + BAS-DROITE, ::after les coins HAUT-DROITE +
+       BAS-GAUCHE, via un dégradé conique ? Non : on reste simple et lisible
+       avec deux pseudo-éléments positionnés en coins opposés. Pour les quatre
+       coins on utilise box-shadow pour dupliquer l'équerre en diagonale. */
+    .ouija::before,
+    .ouija::after {
+      content: "";
+      position: absolute;
+      width: 36px; height: 36px;
+      border: 2px solid rgba(232,195,114,.7);
+      border-radius: 6px;
+      pointer-events: none;
+    }
+    .ouija::before {
+      top: 8px; left: 8px;
+      border-right: none; border-bottom: none;
+    }
+    .ouija::after {
+      bottom: 8px; right: 8px;
+      border-left: none; border-top: none;
     }
 
     /* Arc des glyphes : remplit le stage sans décalage pour partager son
@@ -170,26 +253,44 @@
       inset: 0;
     }
 
-    /* Chaque glyphe est positionné en absolu à arcPosition(--i, 36).
-       Angle et position IDENTIQUES à board.js (cos/sin CSS, angle en rad). */
+    /* LETTRES (index 0..25) : positionnées en absolu sur l'ARC des lettres à
+       arcPosition(--i, 36). Angle et position IDENTIQUES à board.js (cos/sin
+       CSS, angle en rad). Constantes du modèle à deux rangées (geom) :
+         LETTER_COUNT = 26 → divisor 25
+         ARC_START_ANGLE = π·1.08, ARC_END_ANGLE = π·1.92
+         ARC_RADIUS = 300, ARC_CENTER_X = 350, ARC_CENTER_Y = 330
+       board.js : angle = 1.08π + (1.92π − 1.08π)·(i/25) ;
+                  x = 350 + 300·cos(angle) ; y = 330 + 300·sin(angle).
+       Les chiffres (.digit, --d) sont replacés sur une rangée droite par la
+       règle `.ouija .digit` plus bas (override de left/top). */
     .ouija .glyph {
-      --count: 36;
-      --ang: calc(3.14159265 + 3.14159265 * (var(--i) / 35));
+      --ang: calc(3.14159265 * 1.08 + (3.14159265 * 1.92 - 3.14159265 * 1.08) * (var(--i) / 25));
       position: absolute;
-      left: calc(300px + 260px * cos(var(--ang) * 1rad));
-      top: calc(300px + 260px * sin(var(--ang) * 1rad));
+      z-index: 1; /* au-dessus de .candles (z-index:0) — contrôles en avant */
+      left: calc(350px + 300px * cos(var(--ang) * 1rad));
+      top: calc(330px + 300px * sin(var(--ang) * 1rad));
       transform: translate(-50%, -50%);
       /* Petits pastilles rondes translucides — override de la règle générique
          `button { background: var(--glow) ... }` pour ne pas avoir 36 boutons
          ambre pleins. Lisible, IM Fell English, bordure esprit discrète. */
-      width: 2.1rem; height: 2.1rem; min-width: 0;
+      width: 2.4rem; height: 2.4rem; min-width: 0;
       padding: 0; margin: 0;
       display: flex; align-items: center; justify-content: center;
-      font-family: "IM Fell English", Georgia, serif;
-      font-size: 1rem; line-height: 1;
-      color: var(--text);
-      background: rgba(185,166,255,.08);
-      border: 1px solid rgba(185,166,255,.35);
+      /* Engraved, readable serif stack with ligatures/swashes hard-disabled so
+         letter combinations render as plain carved letters (tâche 6, Req 3.1–3.4). */
+      font-family: "IM Fell English", Georgia, "Times New Roman", serif;
+      font-variant-ligatures: none;
+      font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0, "swsh" 0, "calt" 0;
+      letter-spacing: .02em;
+      font-size: 1.1rem; line-height: 1;
+      /* Gravure dorée sur bois (Req 4.2) : couleur or + text-shadow « taillé »
+         (ombre sombre dessous + reflet clair dessus) pour l'effet gravé. La
+         pastille devient un disque bois sombre translucide à liseré doré
+         discret, pour que l'or ressorte sur le plateau. */
+      color: #e8c372;
+      text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,235,180,.25);
+      background: rgba(20,12,6,.35);
+      border: 1px solid rgba(232,195,114,.35);
       border-radius: 50%;
       box-shadow: none;
       transition: transform .15s, box-shadow .2s, background .2s, color .2s;
@@ -210,23 +311,54 @@
       outline-offset: 2px;
     }
 
+    /* CHIFFRES (index 26..35) : rangée horizontale DROITE sous l'arc des
+       lettres. Cette règle vient APRÈS `.ouija .glyph` (même spécificité) donc
+       elle écrase left/top de l'arc. Les chiffres portent style="--d: N"
+       (N = 0..9). Nombres IDENTIQUES à board.js arcPosition (région chiffres) :
+         DIGIT_ROW_X_START = 120, DIGIT_ROW_X_END = 580, DIGIT_ROW_Y = 300,
+         DIGIT_COUNT = 10 → divisor 9
+         x = 120 + (580 − 120)·(d/9) ; y = 300.
+       Les chiffres restent des .glyph : ils héritent taille/police/couleurs ;
+       seuls leur left/top (placement) diffèrent. */
+    .ouija .digit {
+      left: calc(120px + (580px - 120px) * (var(--d) / 9));
+      top: 300px;
+      transform: translate(-50%, -50%);
+    }
+    /* Le hover/focus des chiffres doit conserver le centrage -50%,-50% (comme
+       les lettres) pour qu'ils ne sautent pas hors de leur centre au survol. */
+    .ouija .digit:hover,
+    .ouija .digit:focus-visible {
+      transform: translate(-50%, calc(-50% - 2px));
+    }
+
     /* Marqueurs spéciaux : rangée en BAS du stage (position absolue), look
        « contour esprit » pour se distinguer du Summon ambre. Placés sous
        l'arc des glyphes sans perturber l'espace de coordonnées 600 (ils ne
        décalent pas .arc, qui est en inset:0). Libellés anglais déjà présents. */
     .ouija .markers {
       position: absolute;
+      z-index: 1; /* au-dessus de .candles (z-index:0) */
       left: 0; right: 0; bottom: .3rem;
       display: flex; gap: .6rem; justify-content: center;
       margin: 0;
     }
     .ouija .marker {
-      font-family: "Cinzel Decorative", serif;
-      font-size: .9rem; letter-spacing: .04em;
+      /* Engraved serif stack (no decorative Cinzel) with ligatures/swashes
+         hard-disabled so "NO"/"GOODBYE" render as plain carved letters
+         (tâche 6, Req 3.1–3.4). Cinzel Decorative stays on <h1> only. */
+      font-family: "IM Fell English", Georgia, "Times New Roman", serif;
+      font-variant-ligatures: none;
+      font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0, "swsh" 0, "calt" 0;
+      font-size: .9rem; letter-spacing: .02em;
       padding: .5rem 1rem; min-width: 0;
-      color: var(--spirit);
-      background: rgba(185,166,255,.06);
-      border: 1px solid var(--spirit);
+      /* Marqueurs gravés en or sur bois (Req 4.2), assortis aux glyphes. Même
+         text-shadow « taillé » ; fond bois sombre translucide à liseré doré.
+         Reste lisible sur le plateau (Req 3.3). */
+      color: #e8c372;
+      text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,235,180,.25);
+      background: rgba(20,12,6,.4);
+      border: 1px solid rgba(232,195,114,.4);
       border-radius: 10px;
       box-shadow: none;
       transition: transform .15s, box-shadow .2s, background .2s, color .2s;
@@ -254,12 +386,17 @@
        neutralise déjà). */
     .ouija .planchette {
       position: absolute;
+      z-index: 1; /* au-dessus de .candles (z-index:0) */
       top: 0; left: 0;
-      width: 56px; height: 64px;
-      /* Centre le sight-hole (28,26) sur le point translate(x,y). */
-      margin: -26px 0 0 -28px;
+      width: 80px; height: 92px;
+      /* Centre le WINDOW (centre du viewBox 40,40) sur le point translate(x,y)
+         posé par board.js. Centrage par MARGES négatives et non par
+         transform (le contrôleur écrase transform en style inline). */
+      margin: -40px 0 0 -40px;
       color: var(--glow);
-      filter: drop-shadow(0 0 10px rgba(255,179,71,.6));
+      /* Ombre portée douce + halo « bougie » ambré via --glow (Req 2.3),
+         aucun asset externe (Req 2.5). */
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.55)) drop-shadow(0 0 12px rgba(255,179,71,.6));
       pointer-events: none;
       /* Glissement de la planchette (tâche 12.1, Req 3.1–3.3) :
          - L'append appelle movePlanchetteTo() de façon SYNCHRONE dans le
@@ -278,12 +415,12 @@
       transition: transform 420ms cubic-bezier(.22, .61, .36, 1);
       will-change: transform;
       /* Position de repos par défaut avant toute interaction (polish, non
-         requis par un critère précis) : près du centre-haut de l'arc, dans le
-         repère 600-space partagé avec les glyphes/board.js, pour ne pas poser
+         requis par un critère précis) : près du centre de l'arc, dans le
+         repère 700-space partagé avec les glyphes/board.js, pour ne pas poser
          la planchette dans un coin au premier rendu. Dès le premier
          mouvement, le contrôleur écrase `transform` en style inline, qui
          l'emporte sur cette valeur CSS. */
-      transform: translate(300px, 120px);
+      transform: translate(350px, 150px);
     }
 
     /* Responsive : réduit le stage 600 sur écrans étroits. Le scale est porté
@@ -292,8 +429,8 @@
        se réduit avec le scale (transform n'altère pas la boîte de flux, mais
        le stage a une hauteur fixe de 320 ; sur mobile le scale < 1 laisse un
        léger espace sous le plateau, acceptable). */
-    @media (max-width: 640px) {
-      .ouija { --board-scale: calc((100vw - 2.8rem) / 600); }
+    @media (max-width: 720px) {
+      .ouija { --board-scale: calc((100vw - 2.8rem) / 700); }
     }
 
     .error, .db-error {
@@ -317,7 +454,7 @@
 <body>
   <div class="fog" aria-hidden="true"></div>
   <main>
-    <h1>👻 Séance</h1>
+    <h1>Séance</h1>
     <p class="tagline">Summon your tasks. Banish them to the beyond.</p>
 
     <div id="mascot">
@@ -337,12 +474,27 @@
            — seul le Summon_Control (submit) poste `title` (dégradation gracieuse,
            Req 1.1–1.4, 1.6, 5.1, 7.1). -->
       <div class="ouija" data-board>
+        <!-- Corner candlelight (tâche 8, Req 5.1–5.3). Couche décorative
+             NON-INTERACTIVE, premier enfant de .ouija → peinte DERRIÈRE les
+             glyphes/planchette (z-index:0, les contrôles passent à z-index:1).
+             aria-hidden : purement visuel, ignoré par les lecteurs d'écran.
+             Les lueurs d'angle sont peintes par `background` (radial-gradients),
+             donc elles restent visibles au CHARGEMENT (Req 5.1). L'animation
+             `candle-flicker` les fait vaciller quand le mouvement est autorisé
+             (Req 5.2). Sous `prefers-reduced-motion: reduce`, la règle GLOBALE
+             existante (`animation: none !important`) coupe le vacillement mais
+             le fond reste peint → lueur STATIQUE, aucun media query ajouté
+             (Req 5.3). pointer-events:none → ne bloque jamais les clics. -->
+        <div class="candles" aria-hidden="true"></div>
         <!-- Planchette : SVG inline, aucun lien externe. Positionnée/animée plus
              tard ; le wiring la déplacera via style.transform (Req 1.3). -->
-        <svg class="planchette" data-planchette aria-hidden="true" width="56" height="64" viewBox="0 0 56 64">
-          <path d="M28 2 C12 2 2 14 2 28 C2 42 14 54 28 62 C42 54 54 42 54 28 C54 14 44 2 28 2 Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2"/>
-          <circle cx="28" cy="26" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
-          <circle cx="28" cy="26" r="1.5" fill="currentColor"/>
+        <svg class="planchette" data-planchette aria-hidden="true" width="80" height="92" viewBox="0 0 80 92">
+          <!-- teardrop/heart body: broad rounded top tapering to a point at bottom -->
+          <path d="M40 8 C20 8 8 22 8 40 C8 60 26 74 40 86 C54 74 72 60 72 40 C72 22 60 8 40 8 Z" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="2.5"/>
+          <!-- Planchette_Window: transparent circular opening (fill:none) framing the glyph -->
+          <circle cx="40" cy="40" r="15" fill="none" stroke="currentColor" stroke-width="2.5"/>
+          <!-- faint sight dot; does NOT fill the window so the glyph stays visible -->
+          <circle cx="40" cy="40" r="1.5" fill="currentColor"/>
         </svg>
 
         <!-- Character_Arc : exactement 36 glyphes, A–Z puis 0–9, dans cet ordre
@@ -351,16 +503,29 @@
              aria-label en anglais : "Letter X" pour les lettres, "Digit N" pour
              les chiffres (Req 1.6). -->
         <div class="arc" role="group" aria-label="Character arc">
-          {% for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" %}
-          <button type="button" class="glyph" data-char="{{ ch }}" data-index="{{ loop.index0 }}" style="--i: {{ loop.index0 }};" aria-label="{% if ch in '0123456789' %}Digit {{ ch }}{% else %}Letter {{ ch }}{% endif %}">{{ ch }}</button>
+          {% for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+          <button type="button" class="glyph" data-char="{{ ch }}" data-index="{{ loop.index0 }}" style="--i: {{ loop.index0 }};" aria-label="Letter {{ ch }}">{{ ch }}</button>
+          {% endfor %}
+        </div>
+        <!-- Digit_Row : les 10 chiffres 0–9 extraits de l'arc pour être placés
+             en rangée droite (CSS de la tâche 3). data-index CONTINUE la
+             numérotation globale (loop.index0 + 26 → 26..35) afin que
+             charIndex/arcPosition(index, 36) reste identique côté contrôleur.
+             --d (0..9) servira au positionnement en rangée (tâche 3) ; classe
+             "digit" en plus de "glyph" pour que root.querySelectorAll(
+             "button[data-char]") matche toujours les 36 boutons sans
+             modification du câblage. -->
+        <div class="digit-row" role="group" aria-label="Digit row">
+          {% for ch in "0123456789" %}
+          <button type="button" class="glyph digit" data-char="{{ ch }}" data-index="{{ loop.index0 + 26 }}" style="--d: {{ loop.index0 }};" aria-label="Digit {{ ch }}">{{ ch }}</button>
           {% endfor %}
         </div>
 
         <!-- Special_Markers : YES / NO / GOODBYE, libellés en anglais (Req 1.2). -->
         <div class="markers" role="group" aria-label="Special markers">
-          <button type="button" class="marker" data-marker="YES">Yes</button>
-          <button type="button" class="marker" data-marker="NO">No</button>
-          <button type="button" class="marker" data-marker="GOODBYE">Goodbye</button>
+          <button type="button" class="marker" data-marker="YES">YES</button>
+          <button type="button" class="marker" data-marker="NO">NO</button>
+          <button type="button" class="marker" data-marker="GOODBYE">GOODBYE</button>
         </div>
       </div>
 

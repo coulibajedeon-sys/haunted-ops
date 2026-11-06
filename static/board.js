@@ -143,50 +143,92 @@
     return ARC_CHARS.indexOf(ch) !== -1 ? ch : null;
   }
 
-  // --- Cœur pur (tâche 4) : géométrie de l'arc ------------------------------
+  // --- Cœur pur (tâche 4) : géométrie à deux rangées ------------------------
   //
   // Système de coordonnées (style SVG) : l'origine (0,0) est en HAUT-GAUCHE,
   // l'axe x pointe vers la DROITE et l'axe y vers le BAS. Les angles sont en
-  // RADIANS et croissent dans le sens horaire à l'écran (conséquence du y vers
-  // le bas), mesurés depuis l'axe +x. Avec START_ANGLE = PI (côté gauche) qui
-  // balaie jusqu'à END_ANGLE = 2*PI (côté droit), sin(angle) est négatif sur
-  // tout l'intervalle ]PI, 2*PI[ : les glyphes se placent donc AU-DESSUS du
-  // centre (y < CENTER_Y), dessinant un arc peu profond en haut du plateau.
+  // RADIANS, mesurés depuis l'axe +x, et croissent dans le sens horaire à
+  // l'écran (conséquence du y vers le bas).
+  //
+  // MODÈLE À DEUX RANGÉES (Layout_Geometry) : les 36 glyphes se répartissent en
+  // deux régions distinctes sur un plateau de STAGE_W × STAGE_H :
+  //   - LETTRES (index 0..25) : disposées sur un ARC de lettres, interpolées de
+  //     ARC_START_ANGLE à ARC_END_ANGLE sur un cercle de rayon ARC_RADIUS centré
+  //     en (ARC_CENTER_X, ARC_CENTER_Y). Sur l'intervalle ]PI, 2*PI[, sin(angle)
+  //     est négatif : les lettres se placent AU-DESSUS du centre, dessinant un
+  //     arc peu profond dans la bande supérieure du plateau.
+  //   - CHIFFRES (index 26..35) : disposés sur une RANGÉE horizontale droite à
+  //     y constant (DIGIT_ROW_Y), répartis uniformément de DIGIT_ROW_X_START à
+  //     DIGIT_ROW_X_END, sous l'arc des lettres.
   //
   // `geom` est l'UNIQUE source de vérité partagée entre le placement CSS des
   // glyphes et le calcul de ciblage de la planchette, afin que la planchette
-  // atterrisse exactement sur le centre des glyphes. On fige l'objet pour
-  // empêcher toute mutation accidentelle (le cœur reste pur).
+  // atterrisse exactement sur le centre des glyphes — DANS LES DEUX RÉGIONS. Le
+  // CSS de index.html réutilise exactement ces mêmes constantes (mêmes nombres).
+  // On fige l'objet pour empêcher toute mutation accidentelle (le cœur reste pur).
   var geom = Object.freeze({
-    START_ANGLE: Math.PI, // 180° — premier glyphe, à gauche
-    END_ANGLE: 2 * Math.PI, // 360° — dernier glyphe, à droite
-    RADIUS: 260,
-    CENTER_X: 300,
-    CENTER_Y: 300 // centre sous l'arc : les glyphes balaient le haut du plateau
+    // Dimensions du plateau (stage) partagées avec le CSS de index.html.
+    STAGE_W: 700,
+    STAGE_H: 380,
+    // --- Arc des lettres (index 0..25) ---
+    LETTER_COUNT: 26,
+    ARC_START_ANGLE: Math.PI * 1.08, // première lettre (A), côté gauche
+    ARC_END_ANGLE: Math.PI * 1.92, // dernière lettre (Z), côté droit
+    ARC_RADIUS: 300,
+    ARC_CENTER_X: 350, // STAGE_W / 2
+    ARC_CENTER_Y: 330, // centre sous l'arc : les lettres balaient la bande haute
+    // --- Rangée des chiffres (index 26..35) ---
+    DIGIT_COUNT: 10,
+    DIGIT_ROW_Y: 300, // y constant, sous l'arc des lettres
+    DIGIT_ROW_X_START: 120,
+    DIGIT_ROW_X_END: 580 // répartis uniformément sur la largeur du plateau
   });
 
-  // arcAngle(index, count, g) : angle (radians) du glyphe situé à `index` parmi
-  // `count`, interpolé linéairement de START_ANGLE à END_ANGLE. Garde
-  // count <= 1 (évite la division par zéro / un seul glyphe) en renvoyant
-  // START_ANGLE. `g` est optionnel et vaut le `geom` du module par défaut, ce
-  // qui rend la fonction testable avec une autre disposition (Req 3.1, 3.4).
+  // arcAngle(index, count, g) : angle (radians) de la LETTRE située à `index`,
+  // interpolé linéairement sur le SEUL arc des lettres, de ARC_START_ANGLE à
+  // ARC_END_ANGLE. La paramètre `count` est conservé pour compatibilité de
+  // signature mais l'interpolation s'appuie sur LETTER_COUNT. Garde
+  // LETTER_COUNT <= 1 (évite la division par zéro / une seule lettre) en
+  // renvoyant ARC_START_ANGLE. `g` est optionnel et vaut le `geom` du module par
+  // défaut, ce qui rend la fonction testable avec une autre disposition
+  // (Req 1.2, 1.4).
   function arcAngle(index, count, g) {
     g = g || geom;
-    if (count <= 1) {
-      return g.START_ANGLE;
+    if (g.LETTER_COUNT <= 1) {
+      return g.ARC_START_ANGLE;
     }
-    return g.START_ANGLE + (g.END_ANGLE - g.START_ANGLE) * index / (count - 1);
+    var t = index / (g.LETTER_COUNT - 1);
+    return g.ARC_START_ANGLE + (g.ARC_END_ANGLE - g.ARC_START_ANGLE) * t;
   }
 
-  // arcPosition(index, count, g) : centre { x, y } du glyphe à `index` parmi
-  // `count`, projeté sur l'arc via arcAngle. `g` optionnel (geom du module par
-  // défaut, cohérent avec arcAngle). Pur, totalement défini (Req 3.1, 3.4).
+  // arcPosition(index, count, g) : centre { x, y } du glyphe à `index`, calculé
+  // PAR RÉGION (fonction par morceaux). Pure, totale et toujours finie — ne lève
+  // jamais, quel que soit `index` (0..35 et au-delà) :
+  //   - LETTRES (index < LETTER_COUNT) : projetées sur l'arc via arcAngle, avec
+  //     cos/sin autour de (ARC_CENTER_X, ARC_CENTER_Y) et rayon ARC_RADIUS.
+  //   - CHIFFRES (index >= LETTER_COUNT) : placés sur la rangée droite ; d est
+  //     l'index de chiffre 0..9, interpolé de DIGIT_ROW_X_START à
+  //     DIGIT_ROW_X_END à y = DIGIT_ROW_Y. On garde denom = DIGIT_COUNT - 1
+  //     contre une disposition dégénérée à un seul chiffre.
+  // `count` est accepté pour compatibilité de signature (movePlanchetteTo appelle
+  // arcPosition(index, ARC_CHARS.length)) ; le placement est piloté par la
+  // région de l'index (Req 1.2, 1.4, 1.5).
   function arcPosition(index, count, g) {
     g = g || geom;
-    var angle = arcAngle(index, count, g);
+    if (index < g.LETTER_COUNT) {
+      var angle = arcAngle(index, count, g);
+      return {
+        x: g.ARC_CENTER_X + g.ARC_RADIUS * Math.cos(angle),
+        y: g.ARC_CENTER_Y + g.ARC_RADIUS * Math.sin(angle)
+      };
+    }
+    // Région des chiffres : index 26..35 -> 0..9 le long de la rangée droite.
+    var d = index - g.LETTER_COUNT; // 0..9
+    var denom = (g.DIGIT_COUNT - 1) || 1; // garde les dispositions à un chiffre
+    var frac = d / denom; // 0..1
     return {
-      x: g.CENTER_X + g.RADIUS * Math.cos(angle),
-      y: g.CENTER_Y + g.RADIUS * Math.sin(angle)
+      x: g.DIGIT_ROW_X_START + (g.DIGIT_ROW_X_END - g.DIGIT_ROW_X_START) * frac,
+      y: g.DIGIT_ROW_Y
     };
   }
 
