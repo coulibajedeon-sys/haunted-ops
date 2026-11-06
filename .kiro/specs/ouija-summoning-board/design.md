@@ -109,7 +109,7 @@ arcPosition(index, count, geom) // {x, y} center of a glyph for planchette targe
 - `appendMarker(name, "GOODBYE")`: returns `""` (clears the Spelled_Name) regardless of current content.
 - `setName(raw)`: returns `raw` if `raw.length <= MAX_TITLE_LENGTH`, else the first `MAX_TITLE_LENGTH` characters. Models adopting an edited fallback value.
 - `charIndex(ch)`: case-insensitive match against `ARC_CHARS` is **not** performed by the core — `ARC_CHARS` is uppercase + digits; the DOM adapter uppercases single-letter input before calling. The core treats input literally and returns `-1` when `ch` is not an exact member.
-- `lastArcChar(name)`: scans `name` from the end and returns the first character that is a member of `ARC_CHARS`; returns `null` if none (e.g., name ends in a lowercase letter not present, punctuation, or is empty).
+- `lastArcChar(name)`: returns `name`'s **last character** if that character is a member of `ARC_CHARS`, otherwise `null`. This covers both the empty name and the case where the trailing character is off the arc (lowercase letter, punctuation, space). It does **not** scan backward past off-arc trailing characters, so the planchette stays at its current position whenever the name ends off-arc or is empty (Req 4.7).
 
 **Browser-only adapter:**
 
@@ -229,9 +229,9 @@ The Board_Controller pure core is a set of deterministic string/index functions 
 
 ### Property 6: The planchette target is the last arc character of the name
 
-*For any* Spelled_Name, `lastArcChar(name)` is either `null` (when no character of `name` is on the arc) or a character that is a member of `ARC_CHARS` and appears in `name`, and it is the last such character; equivalently, every character after it in `name` is absent from the arc.
+*For any* Spelled_Name, `lastArcChar(name)` is `null` when `name` is empty or its **last** character is not on the arc; otherwise it equals that last character, which is a member of `ARC_CHARS`.
 
-**Validates: Requirements 3.1, 3.4, 4.5**
+**Validates: Requirements 3.1, 3.4, 4.5, 4.7**
 
 ### Property 7: Board append and fallback adoption agree on the resulting name
 
@@ -280,7 +280,7 @@ A few concrete `node:test` assertions complement the properties:
 - `ARC_CHARS` contains exactly the 26 uppercase letters then the 10 digits, length 36 (Requirement 1.1).
 - `MARKERS` yields `"YES"`, `"NO"`, and clear-on-`GOODBYE` (Requirements 2.2–2.4).
 - `appendChar` at exactly length 199 then 200 (boundary of the cap) (Requirement 2.5).
-- `lastArcChar("")` is `null`; `lastArcChar("abcZ")` is `"Z"`; `lastArcChar("Zx")` is `null` when `x` off-arc (Requirement 3.4).
+- `lastArcChar("")` is `null`; `lastArcChar("abcZ")` is `"Z"`; `lastArcChar("HELLO2")` is `"2"`; `lastArcChar("Zx")` is `null` when `x` off-arc (Requirements 3.4, 4.7).
 
 ### Manual / Integration Verification (not property-based)
 

@@ -12,6 +12,332 @@
         "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
         "timestamp": 1793979027902
       }
+    ],
+    "2.1 Implement `appendChar`, `appendMarker`, `setName` (and `capName` helper)": [
+      {
+        "executionId": "484255a7-61b6-4848-90f7-dda138245b5c",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793980381430
+      },
+      {
+        "executionId": "484255a7-61b6-4848-90f7-dda138245b5c",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793980544581
+      }
+    ],
+    "2. Implement the pure Spelled_Name transforms in `board.js`": [
+      {
+        "executionId": "484255a7-61b6-4848-90f7-dda138245b5c",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793980544863
+      }
+    ],
+    "3.1 Implement `charIndex` and `lastArcChar`": [
+      {
+        "executionId": "d5626f08-a234-49c5-9ef0-5293279f61df",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793980630531
+      },
+      {
+        "executionId": "d5626f08-a234-49c5-9ef0-5293279f61df",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793980829855
+      }
+    ],
+    "3. Implement the pure planchette-resolution functions in `board.js`": [
+      {
+        "executionId": "d5626f08-a234-49c5-9ef0-5293279f61df",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793980830102
+      }
+    ],
+    "4.1 Implement `arcAngle` and `arcPosition` with a shared `geom` constants object": [
+      {
+        "executionId": "f401e780-0ba2-4872-931f-5c2fc08a84ea",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982767661
+      },
+      {
+        "executionId": "f401e780-0ba2-4872-931f-5c2fc08a84ea",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982872729
+      }
+    ],
+    "4. Implement the pure arc-geometry functions in `board.js`": [
+      {
+        "executionId": "f401e780-0ba2-4872-931f-5c2fc08a84ea",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982872892
+      }
+    ],
+    "2.2 Write property test for appending an arc character under the cap": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982914000
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983227507
+      }
+    ],
+    "2.3 Write property test for the length cap and monotonicity of append": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982914832
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983228482
+      }
+    ],
+    "2.4 Write property test for YES/NO literal append under the cap rule": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982916278
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983229875
+      }
+    ],
+    "2.5 Write property test for GOODBYE clearing the name": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982917207
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983231246
+      }
+    ],
+    "2.6 Write property test for fallback adoption enforcing the maximum length": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982918614
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983232213
+      }
+    ],
+    "3.2 Write property test for arc-index lookup soundness": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982919986
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983233590
+      }
+    ],
+    "3.3 Write property test for last-arc-character planchette target": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982921729
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983235023
+      }
+    ],
+    "5.1 Write unit tests complementing the properties": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982922304
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983236074
+      }
+    ],
+    "5.2 Write property test for board/fallback agreement (round trip)": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793982923428
+      },
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983236958
+      }
+    ],
+    "5. Add example / edge-case unit tests for the pure core": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983236290
+      }
+    ],
+    "6. Checkpoint - Ensure all pure-core tests pass": [
+      {
+        "executionId": "9e1ceebc-3f33-44d6-bbd0-7fc79cd4b4f8",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983241944
+      }
+    ],
+    "7.1 Implement `createBoard(options)` and the controller surface": [
+      {
+        "executionId": "d24aa98c-7773-4292-8964-b7762ad8d60f",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983446294
+      },
+      {
+        "executionId": "d24aa98c-7773-4292-8964-b7762ad8d60f",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983620909
+      }
+    ],
+    "7. Implement the browser-only DOM adapter `createBoard` in `board.js`": [
+      {
+        "executionId": "d24aa98c-7773-4292-8964-b7762ad8d60f",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983621024
+      }
+    ],
+    "8.1 Add the board container, character arc, markers, planchette, and keep the fallback input and native submit": [
+      {
+        "executionId": "42f5db04-8ffd-48d2-90dd-3a2570f8c16c",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983648731
+      },
+      {
+        "executionId": "42f5db04-8ffd-48d2-90dd-3a2570f8c16c",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983799457
+      }
+    ],
+    "8. Add Ouija board markup to `templates/index.html`": [
+      {
+        "executionId": "42f5db04-8ffd-48d2-90dd-3a2570f8c16c",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983799596
+      }
+    ],
+    "9.1 Wire the controller to the DOM with graceful degradation": [
+      {
+        "executionId": "09ebeca6-40df-42cf-b49c-59b09c77c95f",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983824151
+      },
+      {
+        "executionId": "09ebeca6-40df-42cf-b49c-59b09c77c95f",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983910306
+      }
+    ],
+    "9. Add the inline wiring script to `templates/index.html`": [
+      {
+        "executionId": "09ebeca6-40df-42cf-b49c-59b09c77c95f",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793983910413
+      }
+    ],
+    "10. Checkpoint - Ensure the board renders and the fallback form still summons": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984101878
+      }
+    ],
+    "11.1 Style the board, glyphs, markers, and planchette with the existing theme": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984108667
+      },
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984565720
+      }
+    ],
+    "11. Apply the dark gothic theme to the board": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984565940
+      }
+    ],
+    "12.1 Animate the planchette to the resolved target with `prefers-reduced-motion` support": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984572903
+      },
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984700589
+      }
+    ],
+    "12. Implement planchette movement with reduced-motion handling": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984700921
+      }
+    ],
+    "13.1 Keep the Spelled_Name, fallback input, and planchette in sync both ways": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984766380
+      },
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984863128
+      }
+    ],
+    "13. Implement bidirectional board <-> fallback input synchronization": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984863333
+      }
+    ],
+    "14.1 Verify existing suites pass and the summon contract is preserved": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793984868429
+      },
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793985170034
+      }
+    ],
+    "14. Regression safety and contract verification": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793985170205
+      }
+    ],
+    "15. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "d152cb19-58b6-4972-bc18-6b83a15bff11",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1793985180610
+      }
     ]
   }
 }

@@ -57,7 +57,13 @@
       0%, 100% { opacity: 1; } 45% { opacity: .92; } 50% { opacity: .75; } 55% { opacity: .95; }
     }
     .tagline { text-align: center; opacity: .75; margin-bottom: 2rem; font-style: italic; }
-    form.summon { display: flex; gap: .6rem; }
+    /* Le formulaire reste en flex-row pour l'input + bouton Summon, mais il
+       enveloppe désormais (flex-wrap) pour que l'Ouija_Board s'affiche en
+       pleine largeur AU-DESSUS de la rangée input/bouton (le board est un item
+       flex à base 100%). L'apparence de l'input et du bouton Summon natifs est
+       inchangée. */
+    form.summon { display: flex; flex-wrap: wrap; gap: .6rem; }
+    form.summon > .ouija { flex: 0 0 100%; }
     input {
       flex: 1; padding: .8rem 1rem; font: inherit; color: var(--text);
       background: rgba(255,255,255,.05); border: 1px solid rgba(185,166,255,.4);
@@ -106,10 +112,200 @@
       margin-top: .5rem; font-style: italic; color: var(--spirit);
       min-height: 1.4em; text-shadow: 0 0 10px rgba(185,166,255,.35);
     }
+    /* ====================================================================
+       Ouija_Board — thème gothique sombre (tâche 11.1, Req 6.1–6.4)
+       CSS uniquement : aucun changement de markup/JS. On réutilise les
+       variables de thème existantes (--glow ambre, --bg, --text, --spirit)
+       et les polices (Cinzel Decorative / IM Fell English + serif). Les
+       fonds sont translucides (rgba) ou transparents pour laisser voir la
+       couche .fog derrière le plateau (Req 6.4).
+
+       GÉOMÉTRIE — alignement avec la planchette (static/board.js) :
+       board.js arcPosition(index, 36) calcule les centres des glyphes dans
+       un espace 600x600 : CENTER_X=300, CENTER_Y=300, RADIUS=260, l'angle
+       balayant START_ANGLE=π (gauche) → END_ANGLE=2π (droite), en coords SVG
+       (x vers la droite, y vers le BAS). Sin(angle) est négatif sur ]π,2π[,
+       donc les glyphes dessinent un arc EN HAUT (y de 300 vers ~40 au milieu).
+       Le contrôleur déplace la planchette via style.transform =
+       "translate(xpx, ypx)" avec CES pixels exacts. On place donc chaque
+       glyphe au MÊME centre en CSS, dans le MÊME repère, via les fonctions
+       trigonométriques CSS cos()/sin() (approche A). Formule identique à
+       board.js : angle = π + π * (--i / 35), left = 300 + 260*cos(angle),
+       top = 300 + 260*sin(angle), puis translate(-50%,-50%) pour centrer le
+       bouton sur ce point. */
+
+    /* IMPORTANT — nesting du markup (tâche 8.1) : la <svg class="planchette">
+       est un ENFANT DIRECT de .ouija et un FRÈRE de .arc (elle n'est PAS dans
+       .arc). Pour que la planchette (positionnée en absolu, déplacée par
+       board.js via translate(x,y) en coords 600-space) partage EXACTEMENT la
+       même origine (0,0) et la même échelle que les glyphes, on fait de
+       .ouija LUI-MÊME le stage 600-space (origine = coin haut-gauche du
+       contenu) : .arc remplit .ouija sans marge, et la planchette, enfant de
+       .ouija, hérite donc de la même origine et du même scale. */
+
+    /* Stage du plateau = .ouija : contexte de positionnement 600x320 (les
+       glyphes occupent y ∈ [~40, 300]). Fond translucide → la brume reste
+       visible (Req 6.4). Mise à l'échelle responsive via --board-scale
+       (défaut 1 = 600px) appliquée au stage entier (glyphes + planchette),
+       préservant leur alignement. Le centre reste (300,300). */
+    .ouija {
+      position: relative;
+      width: 600px;
+      height: 320px;
+      max-width: 100%;
+      margin: 0 auto 1rem;
+      background: rgba(185,166,255,.04);
+      border: 1px solid rgba(185,166,255,.18);
+      border-radius: 18px;
+      box-shadow: 0 0 28px rgba(185,166,255,.10), inset 0 0 40px rgba(7,6,13,.5);
+      transform: scale(var(--board-scale, 1));
+      transform-origin: top center;
+    }
+
+    /* Arc des glyphes : remplit le stage sans décalage pour partager son
+       origine (0,0) avec la planchette. Pas de transform ici (le scale est
+       porté par .ouija et s'applique à l'ensemble). */
+    .ouija .arc {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* Chaque glyphe est positionné en absolu à arcPosition(--i, 36).
+       Angle et position IDENTIQUES à board.js (cos/sin CSS, angle en rad). */
+    .ouija .glyph {
+      --count: 36;
+      --ang: calc(3.14159265 + 3.14159265 * (var(--i) / 35));
+      position: absolute;
+      left: calc(300px + 260px * cos(var(--ang) * 1rad));
+      top: calc(300px + 260px * sin(var(--ang) * 1rad));
+      transform: translate(-50%, -50%);
+      /* Petits pastilles rondes translucides — override de la règle générique
+         `button { background: var(--glow) ... }` pour ne pas avoir 36 boutons
+         ambre pleins. Lisible, IM Fell English, bordure esprit discrète. */
+      width: 2.1rem; height: 2.1rem; min-width: 0;
+      padding: 0; margin: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: "IM Fell English", Georgia, serif;
+      font-size: 1rem; line-height: 1;
+      color: var(--text);
+      background: rgba(185,166,255,.08);
+      border: 1px solid rgba(185,166,255,.35);
+      border-radius: 50%;
+      box-shadow: none;
+      transition: transform .15s, box-shadow .2s, background .2s, color .2s;
+    }
+    /* La translate de centrage doit survivre au :hover (sinon le lift la
+       remplacerait et décalerait le glyphe hors de son centre). On combine
+       donc le centrage ET le lift dans la même transform. */
+    .ouija .glyph:hover,
+    .ouija .glyph:focus-visible {
+      transform: translate(-50%, calc(-50% - 2px));
+      color: #1a1020;
+      background: var(--glow);
+      border-color: var(--glow);
+      box-shadow: 0 0 16px rgba(255,179,71,.6);
+    }
+    .ouija .glyph:focus-visible {
+      outline: 2px solid var(--glow);
+      outline-offset: 2px;
+    }
+
+    /* Marqueurs spéciaux : rangée en BAS du stage (position absolue), look
+       « contour esprit » pour se distinguer du Summon ambre. Placés sous
+       l'arc des glyphes sans perturber l'espace de coordonnées 600 (ils ne
+       décalent pas .arc, qui est en inset:0). Libellés anglais déjà présents. */
+    .ouija .markers {
+      position: absolute;
+      left: 0; right: 0; bottom: .3rem;
+      display: flex; gap: .6rem; justify-content: center;
+      margin: 0;
+    }
+    .ouija .marker {
+      font-family: "Cinzel Decorative", serif;
+      font-size: .9rem; letter-spacing: .04em;
+      padding: .5rem 1rem; min-width: 0;
+      color: var(--spirit);
+      background: rgba(185,166,255,.06);
+      border: 1px solid var(--spirit);
+      border-radius: 10px;
+      box-shadow: none;
+      transition: transform .15s, box-shadow .2s, background .2s, color .2s;
+    }
+    .ouija .marker:hover,
+    .ouija .marker:focus-visible {
+      transform: translateY(-2px);
+      color: #1a1020;
+      background: var(--glow);
+      border-color: var(--glow);
+      box-shadow: 0 0 16px rgba(255,179,71,.55);
+    }
+    .ouija .marker:focus-visible {
+      outline: 2px solid var(--glow);
+      outline-offset: 2px;
+    }
+
+    /* Planchette : positionnée en absolu en haut-gauche du stage ; le
+       contrôleur la déplace via transform: translate(x, y) vers le CENTRE du
+       glyphe (coords 600-space). On NE met PAS de transform ici (il serait
+       écrasé par board.js) : on centre la pointe (sight-hole, cx=28,cy=26 du
+       viewBox 56x64) sur le point cible via des MARGES négatives. Couleur
+       ambre + lueur. La transition translate est minimale ici ; la tâche 12
+       affinera l'animation (et la règle globale prefers-reduced-motion la
+       neutralise déjà). */
+    .ouija .planchette {
+      position: absolute;
+      top: 0; left: 0;
+      width: 56px; height: 64px;
+      /* Centre le sight-hole (28,26) sur le point translate(x,y). */
+      margin: -26px 0 0 -28px;
+      color: var(--glow);
+      filter: drop-shadow(0 0 10px rgba(255,179,71,.6));
+      pointer-events: none;
+      /* Glissement de la planchette (tâche 12.1, Req 3.1–3.3) :
+         - L'append appelle movePlanchetteTo() de façon SYNCHRONE dans le
+           gestionnaire de clic/input, donc le mouvement démarre bien dans les
+           100 ms (Req 3.1).
+         - Mouvement autorisé : 420 ms (dans l'intervalle requis 150–600 ms)
+           avec une courbe ease-out « glissante » pour évoquer la planchette
+           qui file vers le glyphe puis se pose (Req 3.2).
+         - UNIQUEMENT sur `transform` : aucune autre propriété n'est animée,
+           pour ne pas entrer en conflit avec le mouvement réduit.
+         - Mouvement réduit : neutralisé DEUX fois, de façon cohérente — la
+           règle globale @media (prefers-reduced-motion: reduce) force
+           `transition: none !important` (prioritaire, Req 3.3), et board.js
+           pose en plus `style.transition = "none"` inline (déplacement
+           instantané < 100 ms). Les deux concordent (pas de conflit). */
+      transition: transform 420ms cubic-bezier(.22, .61, .36, 1);
+      will-change: transform;
+      /* Position de repos par défaut avant toute interaction (polish, non
+         requis par un critère précis) : près du centre-haut de l'arc, dans le
+         repère 600-space partagé avec les glyphes/board.js, pour ne pas poser
+         la planchette dans un coin au premier rendu. Dès le premier
+         mouvement, le contrôleur écrase `transform` en style inline, qui
+         l'emporte sur cette valeur CSS. */
+      transform: translate(300px, 120px);
+    }
+
+    /* Responsive : réduit le stage 600 sur écrans étroits. Le scale est porté
+       par .ouija, donc glyphes ET planchette (tous deux enfants du stage)
+       subissent le MÊME facteur, préservant leur alignement. La hauteur rendue
+       se réduit avec le scale (transform n'altère pas la boîte de flux, mais
+       le stage a une hauteur fixe de 320 ; sur mobile le scale < 1 laisse un
+       léger espace sous le plateau, acceptable). */
+    @media (max-width: 640px) {
+      .ouija { --board-scale: calc((100vw - 2.8rem) / 600); }
+    }
+
     .error, .db-error {
       margin: 1rem 0 0; padding: .8rem 1rem; border-radius: 10px;
       background: rgba(140,20,40,.25); border: 1px solid rgba(255,80,110,.5);
       color: #ffd6de; text-align: center;
+    }
+    /* Label accessible masqué visuellement (Req 4.1) : associé via for/id et
+       annoncé par les lecteurs d'écran, sans impacter la mise en page. */
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
     }
     input:disabled, button:disabled { opacity: .5; cursor: not-allowed; }
     button:disabled:hover { transform: none; }
@@ -134,7 +330,47 @@
     {% endif %}
 
     <form class="summon" method="post" action="/summon">
-      <input name="title" maxlength="200" placeholder="Name a spirit to summon..." aria-label="New task" value="{{ title|default('', true) }}" required{% if db_error %} disabled{% endif %}>
+      <!-- Ouija_Board (markup additif, tâche 8.1). Le style/positionnement arrive
+           en tâche 11, le câblage JS (window.Board.createBoard) en tâche 9.
+           data-board : point d'ancrage pour le wiring ; les boutons glyphes et
+           marqueurs sont type="button" afin de ne JAMAIS soumettre le formulaire
+           — seul le Summon_Control (submit) poste `title` (dégradation gracieuse,
+           Req 1.1–1.4, 1.6, 5.1, 7.1). -->
+      <div class="ouija" data-board>
+        <!-- Planchette : SVG inline, aucun lien externe. Positionnée/animée plus
+             tard ; le wiring la déplacera via style.transform (Req 1.3). -->
+        <svg class="planchette" data-planchette aria-hidden="true" width="56" height="64" viewBox="0 0 56 64">
+          <path d="M28 2 C12 2 2 14 2 28 C2 42 14 54 28 62 C42 54 54 42 54 28 C54 14 44 2 28 2 Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2"/>
+          <circle cx="28" cy="26" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="28" cy="26" r="1.5" fill="currentColor"/>
+        </svg>
+
+        <!-- Character_Arc : exactement 36 glyphes, A–Z puis 0–9, dans cet ordre
+             (Req 1.1). L'index est passé en propriété CSS --i pour que le CSS de
+             la tâche 11 place chaque glyphe sur l'arc (géométrie dans board.js).
+             aria-label en anglais : "Letter X" pour les lettres, "Digit N" pour
+             les chiffres (Req 1.6). -->
+        <div class="arc" role="group" aria-label="Character arc">
+          {% for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" %}
+          <button type="button" class="glyph" data-char="{{ ch }}" data-index="{{ loop.index0 }}" style="--i: {{ loop.index0 }};" aria-label="{% if ch in '0123456789' %}Digit {{ ch }}{% else %}Letter {{ ch }}{% endif %}">{{ ch }}</button>
+          {% endfor %}
+        </div>
+
+        <!-- Special_Markers : YES / NO / GOODBYE, libellés en anglais (Req 1.2). -->
+        <div class="markers" role="group" aria-label="Special markers">
+          <button type="button" class="marker" data-marker="YES">Yes</button>
+          <button type="button" class="marker" data-marker="NO">No</button>
+          <button type="button" class="marker" data-marker="GOODBYE">Goodbye</button>
+        </div>
+      </div>
+
+      <!-- Fallback_Input : input texte standard, accessible, qui reste synchronisé
+           au plateau et qui soumet réellement `title`. Label visible en anglais
+           associé via for/id (Req 4.1) ; maxlength = MAX_TITLE_LENGTH (Req 4.2).
+           Inchangé par ailleurs (name, value, required, désactivation db_error). -->
+      <label for="summon-title" class="visually-hidden">New task</label>
+      <input id="summon-title" name="title" maxlength="200" placeholder="Name a spirit to summon..." aria-label="New task" value="{{ title|default('', true) }}" required{% if db_error %} disabled{% endif %}>
+      <!-- Summon_Control : vrai bouton submit natif (Req 1.4, 5.1). -->
       <button type="submit"{% if db_error %} disabled{% endif %}>Summon</button>
     </form>
 
@@ -158,6 +394,52 @@
        L'ordre est important : ghost.js définit window.Ghost ; le script de
        colle crée la mascotte et expose window.setQuietMascot/updateMascot ;
        banish.js (auto-init sur DOMContentLoaded) consomme ces globals. -->
+  <script src="/static/board.js"></script>
+  <script>
+    // Câblage de l'Ouija_Board au chargement (tâche 9.1). Mire le style de
+    // l'IIFE de la mascotte : "use strict", dégradation gracieuse, exécution
+    // une fois le DOM prêt. board.js est chargé juste avant ce script, donc
+    // window.Board devrait exister ; on garde quand même le garde-fou.
+    (function () {
+      "use strict";
+      // Dégradation gracieuse : si board.js a échoué à se charger ou n'expose
+      // pas createBoard, on ne fait rien — le formulaire simple (Fallback_Input
+      // + submit natif) continue de fonctionner (Req 7.2).
+      if (!window.Board || typeof window.Board.createBoard !== "function") {
+        return;
+      }
+
+      function wire() {
+        // Le conteneur de plateau (.ouija), la planchette SVG et l'input de
+        // repli. On ne câble que si les trois sont présents.
+        var container = document.querySelector("[data-board]");
+        var planchetteEl = document.querySelector("[data-planchette]");
+        var inputEl = document.querySelector('input[name="title"]')
+          || document.getElementById("summon-title");
+
+        if (!container || !inputEl || !planchetteEl) {
+          return; // markup absent : on laisse le formulaire natif tel quel
+        }
+
+        // Le contrôleur branche lui-même ses écouteurs (clics glyphes/marqueurs,
+        // événement input), garde l'input synchronisé et déplace la planchette.
+        // On ne re-câble RIEN ici, et on n'intercepte pas le submit : le bouton
+        // Summon natif poste `title` à /summon normalement (Req 5.1, 5.2).
+        window.Board.createBoard({
+          root: container,
+          input: inputEl,
+          planchette: planchetteEl
+        });
+      }
+
+      // Exécuter une fois le DOM prêt (même motif que l'IIFE mascotte).
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", wire);
+      } else {
+        wire();
+      }
+    })();
+  </script>
   <script src="/static/ghost.js"></script>
   <script>
     // Câblage de la mascotte au chargement selon la présence d'esprits
