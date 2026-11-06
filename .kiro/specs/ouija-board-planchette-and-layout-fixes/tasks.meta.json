@@ -1,0 +1,181 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test (rect helper) + document manual YES/NO repro": {
+      "status": "passed",
+      "failingExample": "Exploration test FAILED as expected on unfixed code (this is the SUCCESS case). Counterexample from fast-check: [{\"left\":0,\"top\":0,\"width\":0,\"height\":0},{\"left\":0,\"top\":0,\"width\":0,\"height\":0}] with root cause \"TypeError: elementCenterInContainer is not a function\" — the pure rect-center helper does not exist yet on static/board.js, confirming the fix surface is absent. Manual repro documented in the test header: on unfixed code, clicking YES glides the planchette to the S glyph and clicking NO glides to O, because the move target is charIndex(lastArcChar(name)) and 'YES'/'NO' end in arc letters S/O.",
+      "lastRunTimestamp": 1794002388170
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test (rect helper) + document manual YES/NO repro": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002180547
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002422892
+      }
+    ],
+    "2. Write preservation property checks (BEFORE implementing the fix)": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002428572
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002609760
+      }
+    ],
+    "3.1 Recenter the letter arc via new geom constants, mirrored in CSS": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002615999
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002888958
+      }
+    ],
+    "3.2 Confirm responsive scaling keeps glyphs inside the board": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002618359
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002890199
+      }
+    ],
+    "3.3 Redesign the planchette inline SVG as a classic planchette": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002619008
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002891604
+      }
+    ],
+    "3.4 Kill the Q swash on the engraved serif stack": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002619742
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002892514
+      }
+    ],
+    "3. Fix the Ouija board layout, planchette shape, and glyph typography": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002892743
+      }
+    ],
+    "4.1 Add the pure, Node-safe rect-center helper": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002900839
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003186708
+      }
+    ],
+    "4.2 Rewrite `movePlanchetteTo` to measure the real target element": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002901779
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003188094
+      }
+    ],
+    "4.3 Wire marker clicks and window resize": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002903254
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003189530
+      }
+    ],
+    "4.4 Flesh out the NEW rect-center property test": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794002904326
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003190386
+      }
+    ],
+    "4.5 Verify bug condition exploration test now passes": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003195605
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003342220
+      }
+    ],
+    "4.6 Verify preservation checks still pass": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003196728
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003343121
+      }
+    ],
+    "4. Fix planchette targeting to use real element rects": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003343314
+      }
+    ],
+    "5. Checkpoint - Full regression and manual verification": [
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003349508
+      },
+      {
+        "executionId": "2bb5cf3d-dae5-480b-adbc-16b5556e86ce",
+        "chatSessionId": "sess_fdfc3f2b-3612-4ec6-a8f0-999689fe4b7a",
+        "timestamp": 1794003388733
+      }
+    ]
+  }
+}

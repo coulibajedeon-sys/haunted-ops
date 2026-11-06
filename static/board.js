@@ -153,8 +153,10 @@
   // MODÈLE À DEUX RANGÉES (Layout_Geometry) : les 36 glyphes se répartissent en
   // deux régions distinctes sur un plateau de STAGE_W × STAGE_H :
   //   - LETTRES (index 0..25) : disposées sur un ARC de lettres, interpolées de
-  //     ARC_START_ANGLE à ARC_END_ANGLE sur un cercle de rayon ARC_RADIUS centré
-  //     en (ARC_CENTER_X, ARC_CENTER_Y). Sur l'intervalle ]PI, 2*PI[, sin(angle)
+  //     ARC_START_ANGLE (π·1.02) à ARC_END_ANGLE (π·1.98) sur un cercle de rayon
+  //     ARC_RADIUS (268) centré en (ARC_CENTER_X=350, ARC_CENTER_Y=300). L'arc est
+  //     symétrique autour de x=350 (balayage symétrique autour de 1.5π) et logé
+  //     dans la bande supérieure du plateau. Sur l'intervalle ]PI, 2*PI[, sin(angle)
   //     est négatif : les lettres se placent AU-DESSUS du centre, dessinant un
   //     arc peu profond dans la bande supérieure du plateau.
   //   - CHIFFRES (index 26..35) : disposés sur une RANGÉE horizontale droite à
@@ -172,11 +174,11 @@
     STAGE_H: 380,
     // --- Arc des lettres (index 0..25) ---
     LETTER_COUNT: 26,
-    ARC_START_ANGLE: Math.PI * 1.08, // première lettre (A), côté gauche
-    ARC_END_ANGLE: Math.PI * 1.92, // dernière lettre (Z), côté droit
-    ARC_RADIUS: 300,
+    ARC_START_ANGLE: Math.PI * 1.02, // première lettre (A), côté gauche
+    ARC_END_ANGLE: Math.PI * 1.98, // dernière lettre (Z), côté droit
+    ARC_RADIUS: 268,
     ARC_CENTER_X: 350, // STAGE_W / 2
-    ARC_CENTER_Y: 330, // centre sous l'arc : les lettres balaient la bande haute
+    ARC_CENTER_Y: 300, // centre sous l'arc : les lettres balaient la bande haute
     // --- Rangée des chiffres (index 26..35) ---
     DIGIT_COUNT: 10,
     DIGIT_ROW_Y: 300, // y constant, sous l'arc des lettres
@@ -232,6 +234,28 @@
     };
   }
 
+  // --- Cœur pur (tâche 4.1) : centre d'un élément dans son conteneur --------
+  //
+  // elementCenterInContainer(targetRect, containerRect) : helper PUR, totalement
+  // Node-safe (aucun DOM réel), qui calcule le point { x, y } du CENTRE d'un
+  // élément cible EXPRIMÉ DANS LE REPÈRE DU CONTENEUR. Il n'opère que sur des
+  // objets plats { left, top, width, height } (par ex. le résultat de
+  // getBoundingClientRect(), mais aussi n'importe quel rect synthétique de test).
+  //
+  //   x = targetRect.left + targetRect.width  / 2 - containerRect.left
+  //   y = targetRect.top  + targetRect.height / 2 - containerRect.top
+  //
+  // Autrement dit : centre de la cible (coin + demi-taille) moins l'origine du
+  // conteneur, ce qui ramène le point dans l'espace local du conteneur. Pur et
+  // total : ne lève jamais, ne mute rien, et renvoie des coordonnées finies dès
+  // lors que les rects d'entrée sont finis (Req 2.1, 2.2).
+  function elementCenterInContainer(targetRect, containerRect) {
+    return {
+      x: targetRect.left + targetRect.width / 2 - containerRect.left,
+      y: targetRect.top + targetRect.height / 2 - containerRect.top
+    };
+  }
+
   // --- Adaptateur DOM (tâche 7) : createBoard(options) ----------------------
   //
   // Couche NAVIGATEUR uniquement. `createBoard` ne touche au DOM que lorsqu'il
@@ -279,31 +303,108 @@
       ? setName(input.value)
       : "";
 
-    // movePlanchetteTo(index) : place la planchette au centre du glyphe `index`
-    // via arcPosition(index, ARC_CHARS.length). index < 0 ou null/invalide →
-    // on ne bouge pas (Req 3.5, 4.7). Sous reduceMotion, déplacement instantané
-    // (transition désactivée) ; sinon on laisse la transition CSS animer.
-    function movePlanchetteTo(index) {
-      if (!planchette) {
+    // Élément DOM courant visé par la planchette. Mémorisé à chaque déplacement
+    // réussi afin que l'écouteur de redimensionnement (tâche 4.3) puisse
+    // re-mesurer et repositionner sur LA MÊME cible après un changement de
+    // viewport/scale. null tant qu'aucune cible n'a été visée (nom vide, etc.).
+    var lastTargetEl = null;
+
+    // movePlanchetteToElement(el) : place la planchette sur le CENTRE RÉEL à
+    // l'écran de l'élément `el`, mesuré via getBoundingClientRect() relativement
+    // au conteneur du plateau (`root`). Remplace l'ancienne math pure
+    // arcPosition : la planchette atterrit désormais exactement sur le glyphe ou
+    // le bouton marqueur affiché, quelle que soit la disposition (Req 2.1, 2.2).
+    //
+    // RAISONNEMENT SUR LE SCALE (décision documentée) :
+    //   `.ouija` (= root) porte `transform: scale(var(--board-scale, 1))`.
+    //   getBoundingClientRect() renvoie des pixels À L'ÉCRAN, donc DÉJÀ MIS À
+    //   L'ÉCHELLE, aussi bien pour la cible que pour le conteneur (tous deux
+    //   vivent dans le stage mis à l'échelle). Le delta (centre-cible −
+    //   origine-conteneur) est donc en pixels SCALÉS. Or la planchette, enfant
+    //   du stage, reçoit sa `transform: translate(x, y)` inline À L'INTÉRIEUR du
+    //   stage mis à l'échelle : le scale() du stage multiplie ce translate. Il
+    //   faut donc exprimer le translate en unités NON scalées du stage, en
+    //   divisant le delta scalé par le scale courant. On récupère le scale via
+    //   cr.width / geom.STAGE_W (largeur rendue / largeur de référence 700),
+    //   avec garde anti division par zéro. Ainsi la fenêtre de la planchette se
+    //   pose sur le centre de la cible à n'importe quelle largeur de viewport.
+    function movePlanchetteToElement(el) {
+      if (!planchette || !el || !root) {
         return;
       }
-      if (typeof index !== "number" || isNaN(index) || index < 0) {
-        return; // laisser la planchette où elle est
+      if (typeof el.getBoundingClientRect !== "function"
+          || typeof root.getBoundingClientRect !== "function") {
+        return;
       }
-      var pos = arcPosition(index, ARC_CHARS.length);
+      var tr = el.getBoundingClientRect();
+      var cr = root.getBoundingClientRect();
+      var c = elementCenterInContainer(
+        { left: tr.left, top: tr.top, width: tr.width, height: tr.height },
+        { left: cr.left, top: cr.top, width: cr.width, height: cr.height }
+      );
+      // scale = largeur rendue (scalée) / largeur de référence du stage (700).
+      var scale = (cr.width && geom.STAGE_W) ? (cr.width / geom.STAGE_W) : 1;
+      if (!scale) {
+        scale = 1;
+      }
+      var x = c.x / scale;
+      var y = c.y / scale;
       // Mouvement réduit : pas de transition (déplacement immédiat). Sinon on
       // efface le style inline pour laisser s'appliquer la transition CSS.
       if (planchette.style) {
         planchette.style.transition = reduceMotion ? "none" : "";
-        planchette.style.transform = "translate(" + pos.x + "px, " + pos.y + "px)";
+        planchette.style.transform = "translate(" + x + "px, " + y + "px)";
       }
+      lastTargetEl = el;
+    }
+
+    // movePlanchetteTo(index) : conserve l'API par index pour les LETTRES et
+    // CHIFFRES. On résout l'index 0..35 vers son caractère d'arc puis vers le
+    // bouton DOM correspondant (button[data-char="X"]) et on délègue à
+    // movePlanchetteToElement, qui mesure le rect réel. index < 0 / invalide /
+    // aucun élément trouvé → on ne bouge pas (préserve la règle « pas de
+    // mouvement » quand lastArcChar est null, Req 3.5, 4.7). Les accès DOM sont
+    // gardés : sous Node (require) planchette/root sont null → aucun appel DOM.
+    function movePlanchetteTo(index) {
+      if (!planchette || !root) {
+        return;
+      }
+      if (typeof index !== "number" || isNaN(index) || index < 0 || index >= ARC_CHARS.length) {
+        return; // laisser la planchette où elle est
+      }
+      if (typeof document === "undefined" || typeof root.querySelector !== "function") {
+        return;
+      }
+      var ch = ARC_CHARS.charAt(index);
+      var el = root.querySelector('button[data-char="' + ch + '"]');
+      if (!el) {
+        return; // aucun glyphe correspondant → pas de mouvement
+      }
+      movePlanchetteToElement(el);
     }
 
     // Repositionne la planchette sur le dernier caractère d'arc du Spelled_Name
     // courant. Si lastArcChar renvoie null (nom vide ou fin hors arc) →
-    // charIndex(null) vaut -1 et movePlanchetteTo ne bouge pas (Req 3.4, 4.6, 4.7).
+    // charIndex(null) vaut -1 et movePlanchetteTo ne bouge pas (Req 3.4, 4.6,
+    // 4.7). Met à jour lastTargetEl pour que le redimensionnement suive la
+    // bonne cible : on remet null quand il n'y a pas de glyphe cible (nom vide
+    // / fin hors arc), sinon l'élément résolu.
     function repositionPlanchette() {
-      movePlanchetteTo(charIndex(lastArcChar(name)));
+      var idx = charIndex(lastArcChar(name));
+      if (idx < 0 || typeof document === "undefined"
+          || !root || typeof root.querySelector !== "function") {
+        if (idx < 0) {
+          lastTargetEl = null;
+        }
+        movePlanchetteTo(idx);
+        return;
+      }
+      var ch = ARC_CHARS.charAt(idx);
+      var el = root.querySelector('button[data-char="' + ch + '"]');
+      lastTargetEl = el || null;
+      if (el) {
+        movePlanchetteToElement(el);
+      }
     }
 
     // Écrit le Spelled_Name courant dans le Fallback_Input (board → input).
@@ -371,12 +472,37 @@
         var markerButtons = root.querySelectorAll("button[data-marker]");
         Array.prototype.forEach.call(markerButtons, function (btn) {
           btn.addEventListener("click", function () {
+            // Met d'abord à jour le Spelled_Name (YES/NO ajoutent leur texte,
+            // GOODBYE efface). activateMarker → afterStateChange →
+            // repositionPlanchette viserait le dernier caractère d'arc du
+            // nouveau nom (S pour "YES", O pour "NO"), ce qui est précisément le
+            // bug que l'on corrige côté MARQUEUR. On vise donc explicitement le
+            // BOUTON MARQUEUR cliqué APRÈS activateMarker, de sorte que le clic
+            // marqueur l'emporte (Req 2.1, 2.3).
             activateMarker(btn.getAttribute("data-marker"));
+            // GOODBYE efface le nom (lastArcChar null) : on vise malgré tout le
+            // bouton GOODBYE cliqué — choix cohérent « cliquer un marqueur pose
+            // la planchette sur ce marqueur », plutôt que de la laisser figée.
+            movePlanchetteToElement(btn);
           });
         });
         if (input && typeof input.addEventListener === "function") {
           input.addEventListener("input", function () {
             syncFromInput();
+          });
+        }
+        // Redimensionnement de la fenêtre : la largeur rendue du stage (et donc
+        // le scale) change, déplaçant les centres réels des éléments. On
+        // re-mesure et repositionne la planchette sur LA MÊME cible courante
+        // (lastTargetEl) si elle existe encore dans le DOM. Gardé par la
+        // présence de window (environnements de test / Node). Pas de debounce
+        // nécessaire ici (repositionnement idempotent et peu coûteux).
+        if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+          window.addEventListener("resize", function () {
+            if (lastTargetEl
+                && (typeof lastTargetEl.isConnected !== "boolean" || lastTargetEl.isConnected)) {
+              movePlanchetteToElement(lastTargetEl);
+            }
           });
         }
       }
@@ -387,7 +513,8 @@
       activateMarker: activateMarker,
       syncFromInput: syncFromInput,
       value: value,
-      movePlanchetteTo: movePlanchetteTo
+      movePlanchetteTo: movePlanchetteTo,
+      movePlanchetteToElement: movePlanchetteToElement
     };
   }
 
@@ -405,6 +532,7 @@
     geom: geom,
     arcAngle: arcAngle,
     arcPosition: arcPosition,
+    elementCenterInContainer: elementCenterInContainer,
     createBoard: createBoard
   };
 });

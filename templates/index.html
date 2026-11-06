@@ -126,11 +126,11 @@
        la droite, y vers le BAS), par région :
          - LETTRES (index 0..25) sur l'ARC des lettres :
              LETTER_COUNT=26 → divisor 25
-             ARC_START_ANGLE=π·1.08, ARC_END_ANGLE=π·1.92 (balayage ]π,2π[,
-             sin négatif → arc EN HAUT), ARC_RADIUS=300,
-             ARC_CENTER=(350,330).
-             angle = 1.08π + (1.92π−1.08π)·(i/25) ;
-             x = 350 + 300·cos(angle) ; y = 330 + 300·sin(angle).
+             ARC_START_ANGLE=π·1.02, ARC_END_ANGLE=π·1.98 (balayage ]π,2π[,
+             symétrique autour de 1.5π, sin négatif → arc EN HAUT),
+             ARC_RADIUS=268, ARC_CENTER=(350,300).
+             angle = 1.02π + (1.98π−1.02π)·(i/25) ;
+             x = 350 + 268·cos(angle) ; y = 300 + 268·sin(angle).
          - CHIFFRES (index 26..35 → d=0..9) sur une RANGÉE DROITE :
              DIGIT_COUNT=10 → divisor 9, DIGIT_ROW_Y=300,
              DIGIT_ROW_X_START=120, DIGIT_ROW_X_END=580.
@@ -257,32 +257,35 @@
        arcPosition(--i, 36). Angle et position IDENTIQUES à board.js (cos/sin
        CSS, angle en rad). Constantes du modèle à deux rangées (geom) :
          LETTER_COUNT = 26 → divisor 25
-         ARC_START_ANGLE = π·1.08, ARC_END_ANGLE = π·1.92
-         ARC_RADIUS = 300, ARC_CENTER_X = 350, ARC_CENTER_Y = 330
-       board.js : angle = 1.08π + (1.92π − 1.08π)·(i/25) ;
-                  x = 350 + 300·cos(angle) ; y = 330 + 300·sin(angle).
+         ARC_START_ANGLE = π·1.02, ARC_END_ANGLE = π·1.98
+         ARC_RADIUS = 268, ARC_CENTER_X = 350, ARC_CENTER_Y = 300
+       board.js : angle = 1.02π + (1.98π − 1.02π)·(i/25) ;
+                  x = 350 + 268·cos(angle) ; y = 300 + 268·sin(angle).
        Les chiffres (.digit, --d) sont replacés sur une rangée droite par la
        règle `.ouija .digit` plus bas (override de left/top). */
     .ouija .glyph {
-      --ang: calc(3.14159265 * 1.08 + (3.14159265 * 1.92 - 3.14159265 * 1.08) * (var(--i) / 25));
+      --ang: calc(3.14159265 * 1.02 + (3.14159265 * 1.98 - 3.14159265 * 1.02) * (var(--i) / 25));
       position: absolute;
       z-index: 1; /* au-dessus de .candles (z-index:0) — contrôles en avant */
-      left: calc(350px + 300px * cos(var(--ang) * 1rad));
-      top: calc(330px + 300px * sin(var(--ang) * 1rad));
+      left: calc(350px + 268px * cos(var(--ang) * 1rad));
+      top: calc(300px + 268px * sin(var(--ang) * 1rad));
       transform: translate(-50%, -50%);
       /* Petits pastilles rondes translucides — override de la règle générique
          `button { background: var(--glow) ... }` pour ne pas avoir 36 boutons
-         ambre pleins. Lisible, IM Fell English, bordure esprit discrète. */
-      width: 2.4rem; height: 2.4rem; min-width: 0;
+         ambre pleins. Lisible, IM Fell English, bordure esprit discrète.
+         Pastilles plus compactes (1.7rem ≈ 31px à 18.4px/rem) pour tenir sur
+         l'arc recentré (R=268) sans chevauchement ni débordement. */
+      width: 1.7rem; height: 1.7rem; min-width: 0;
       padding: 0; margin: 0;
       display: flex; align-items: center; justify-content: center;
       /* Engraved, readable serif stack with ligatures/swashes hard-disabled so
          letter combinations render as plain carved letters (tâche 6, Req 3.1–3.4). */
       font-family: "IM Fell English", Georgia, "Times New Roman", serif;
+      font-variant: normal;
       font-variant-ligatures: none;
       font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0, "swsh" 0, "calt" 0;
       letter-spacing: .02em;
-      font-size: 1.1rem; line-height: 1;
+      font-size: 1rem; line-height: 1; /* ~1rem, ≥16px rendu */
       /* Gravure dorée sur bois (Req 4.2) : couleur or + text-shadow « taillé »
          (ombre sombre dessous + reflet clair dessus) pour l'effet gravé. La
          pastille devient un disque bois sombre translucide à liseré doré
@@ -348,6 +351,7 @@
          hard-disabled so "NO"/"GOODBYE" render as plain carved letters
          (tâche 6, Req 3.1–3.4). Cinzel Decorative stays on <h1> only. */
       font-family: "IM Fell English", Georgia, "Times New Roman", serif;
+      font-variant: normal;
       font-variant-ligatures: none;
       font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0, "swsh" 0, "calt" 0;
       font-size: .9rem; letter-spacing: .02em;
@@ -388,11 +392,11 @@
       position: absolute;
       z-index: 1; /* au-dessus de .candles (z-index:0) */
       top: 0; left: 0;
-      width: 80px; height: 92px;
-      /* Centre le WINDOW (centre du viewBox 40,40) sur le point translate(x,y)
-         posé par board.js. Centrage par MARGES négatives et non par
-         transform (le contrôleur écrase transform en style inline). */
-      margin: -40px 0 0 -40px;
+      width: 96px; height: 96px;
+      /* Centre le WINDOW (centre du viewBox 96×96 → 48,48) sur le point
+         translate(x,y) posé par board.js. Centrage par MARGES négatives et non
+         par transform (le contrôleur écrase transform en style inline). */
+      margin: -48px 0 0 -48px;
       color: var(--glow);
       /* Ombre portée douce + halo « bougie » ambré via --glow (Req 2.3),
          aucun asset externe (Req 2.5). */
@@ -415,12 +419,12 @@
       transition: transform 420ms cubic-bezier(.22, .61, .36, 1);
       will-change: transform;
       /* Position de repos par défaut avant toute interaction (polish, non
-         requis par un critère précis) : près du centre de l'arc, dans le
-         repère 700-space partagé avec les glyphes/board.js, pour ne pas poser
-         la planchette dans un coin au premier rendu. Dès le premier
-         mouvement, le contrôleur écrase `transform` en style inline, qui
-         l'emporte sur cette valeur CSS. */
-      transform: translate(350px, 150px);
+         requis par un critère précis) : près du centre de l'arc recentré
+         (ARC_CENTER_X=350, sous l'apex), dans le repère 700-space partagé avec
+         les glyphes/board.js, pour ne pas poser la planchette dans un coin au
+         premier rendu. Dès le premier mouvement, le contrôleur écrase
+         `transform` en style inline, qui l'emporte sur cette valeur CSS. */
+      transform: translate(350px, 120px);
     }
 
     /* Responsive : réduit le stage 600 sur écrans étroits. Le scale est porté
@@ -486,15 +490,55 @@
              le fond reste peint → lueur STATIQUE, aucun media query ajouté
              (Req 5.3). pointer-events:none → ne bloque jamais les clics. -->
         <div class="candles" aria-hidden="true"></div>
-        <!-- Planchette : SVG inline, aucun lien externe. Positionnée/animée plus
-             tard ; le wiring la déplacera via style.transform (Req 1.3). -->
-        <svg class="planchette" data-planchette aria-hidden="true" width="80" height="92" viewBox="0 0 80 92">
-          <!-- teardrop/heart body: broad rounded top tapering to a point at bottom -->
-          <path d="M40 8 C20 8 8 22 8 40 C8 60 26 74 40 86 C54 74 72 60 72 40 C72 22 60 8 40 8 Z" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="2.5"/>
-          <!-- Planchette_Window: transparent circular opening (fill:none) framing the glyph -->
-          <circle cx="40" cy="40" r="15" fill="none" stroke="currentColor" stroke-width="2.5"/>
-          <!-- faint sight dot; does NOT fill the window so the glyph stays visible -->
-          <circle cx="40" cy="40" r="1.5" fill="currentColor"/>
+        <!-- Planchette : SVG inline, aucun lien externe (Req 2.5). Planchette
+             CLASSIQUE : corps large en cœur/médiator arrondi, plus large en
+             HAUT et s'effilant vers une pointe douce EN BAS (pas un pin de
+             carte). Fenêtre circulaire centrale TRANSPARENTE (fill="none") qui
+             encadre le glyphe. Corps en « bois vieilli » peint par un dégradé
+             SVG inline <defs> (bruns chauds #3a2614 → #241608, aucune image
+             externe), contour OR #e8c372. viewBox 0 0 96 96 ; le CENTRE de la
+             fenêtre est en (48,48) — c'est le point que le contrôleur vise via
+             style.transform = translate(x,y). Le centrage sur ce point se fait
+             par MARGES négatives en CSS (margin:-48px 0 0 -48px), jamais via
+             transform (que le contrôleur écrase). aria-hidden : purement
+             décoratif. -->
+        <svg class="planchette" data-planchette aria-hidden="true" width="96" height="96" viewBox="0 0 96 96">
+          <defs>
+            <!-- Dégradé bois vieilli : brun chaud en haut vers brun très sombre
+                 en bas, pour un corps qui a du relief. Aucun asset externe. -->
+            <linearGradient id="planchette-wood" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3a2614"/>
+              <stop offset="1" stop-color="#241608"/>
+            </linearGradient>
+            <!-- Ombre interne douce et discrète (tasteful), pour poser le corps
+                 sur le plateau sans alourdir. -->
+            <radialGradient id="planchette-shade" cx="0.5" cy="0.4" r="0.7">
+              <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+              <stop offset="1" stop-color="#000000" stop-opacity="0.28"/>
+            </radialGradient>
+          </defs>
+          <!-- Corps : médiator/cœur large. Épaules hautes larges (y≈22), flancs
+               bombés qui convergent vers une pointe arrondie en bas (48,86).
+               Rempli du dégradé bois, contour OR. -->
+          <path d="M48 20
+                   C30 8 10 14 10 34
+                   C10 52 28 66 48 86
+                   C68 66 86 52 86 34
+                   C86 14 66 8 48 20 Z"
+                fill="url(#planchette-wood)" stroke="#e8c372" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- Voile d'ombre interne (par-dessus le bois, sous l'anneau). -->
+          <path d="M48 20
+                   C30 8 10 14 10 34
+                   C10 52 28 66 48 86
+                   C68 66 86 52 86 34
+                   C86 14 66 8 48 20 Z"
+                fill="url(#planchette-shade)" stroke="none"/>
+          <!-- Planchette_Window : ouverture circulaire TRANSPARENTE (fill:none)
+               qui encadre le glyphe. Centre (48,48) = cible du translate.
+               Anneau OR. Rayon généreux pour encadrer une lettre. -->
+          <circle cx="48" cy="48" r="20" fill="none" stroke="#e8c372" stroke-width="3"/>
+          <!-- Fin liseré intérieur doré, décoratif, laissant la fenêtre vide. -->
+          <circle cx="48" cy="48" r="20" fill="none" stroke="#ffe9b8" stroke-width="0.75" stroke-opacity="0.5"/>
         </svg>
 
         <!-- Character_Arc : exactement 36 glyphes, A–Z puis 0–9, dans cet ordre
