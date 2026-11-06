@@ -309,6 +309,39 @@
     // viewport/scale. null tant qu'aucune cible n'a été visée (nom vide, etc.).
     var lastTargetEl = null;
 
+    // applyBoardScale() : CORRECTIF RESPONSIVE (issues 1 & 2). Le stage `.ouija`
+    // est dessine dans un repere FIXE de geom.STAGE_W (700) de large puis mis a
+    // l'echelle via `transform: scale(var(--board-scale))`. L'ancien scale etait
+    // base sur le viewport (media query), donc il ne correspondait PAS a la
+    // largeur reellement disponible du conteneur (main max-width 640, .ouija
+    // max-width:100%), d'ou le debordement de Z a droite et la derive de ~60px
+    // de la planchette (le scale suppose par movePlanchetteToElement, cr.width/
+    // STAGE_W, ne matchait pas le scale CSS applique). On calcule donc ICI le
+    // scale a partir de la largeur DISPONIBLE mesuree (offsetWidth du parent, ou
+    // clientWidth du root) et on l'ecrit dans --board-scale. Ainsi le scale CSS
+    // == cr.width/STAGE_W par construction, les glyphes tiennent dans la bordure
+    // avec des marges egales, et la planchette atterrit pile sur le glyphe.
+    function applyBoardScale() {
+      if (typeof document === "undefined" || !root || !root.style) {
+        return 1;
+      }
+      // Largeur disponible : celle du parent (le flux), sinon le root lui-meme.
+      var avail = 0;
+      if (root.parentElement && typeof root.parentElement.clientWidth === "number") {
+        avail = root.parentElement.clientWidth;
+      }
+      if (!avail && typeof root.clientWidth === "number") {
+        avail = root.clientWidth;
+      }
+      var stageW = geom.STAGE_W || 700;
+      var scale = avail > 0 ? Math.min(1, avail / stageW) : 1;
+      if (!scale || !isFinite(scale)) {
+        scale = 1;
+      }
+      root.style.setProperty("--board-scale", String(scale));
+      return scale;
+    }
+
     // movePlanchetteToElement(el) : place la planchette sur le CENTRE RÉEL à
     // l'écran de l'élément `el`, mesuré via getBoundingClientRect() relativement
     // au conteneur du plateau (`root`). Remplace l'ancienne math pure
@@ -463,6 +496,7 @@
         if (typeof root.setAttribute === "function") {
           root.setAttribute("data-board-bound", "1");
         }
+        applyBoardScale();
         var charButtons = root.querySelectorAll("button[data-char]");
         Array.prototype.forEach.call(charButtons, function (btn) {
           btn.addEventListener("click", function () {
@@ -499,6 +533,7 @@
         // nécessaire ici (repositionnement idempotent et peu coûteux).
         if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
           window.addEventListener("resize", function () {
+            applyBoardScale();
             if (lastTargetEl
                 && (typeof lastTargetEl.isConnected !== "boolean" || lastTargetEl.isConnected)) {
               movePlanchetteToElement(lastTargetEl);

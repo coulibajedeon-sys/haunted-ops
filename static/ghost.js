@@ -111,6 +111,62 @@
       return message;
     }
 
+﻿    // Reactions visuelles du fantome SVG (issue 4). On pose une classe
+    // transitoire sur .ghost-svg, puis on la retire a la fin de l'animation.
+    // Sous prefers-reduced-motion, on ne pose rien (fantome statique). Gardes
+    // defensifs : SVG absent ou environnement Node => no-op sur.
+    function prefersReducedMotion() {
+      if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+        return false;
+      }
+      try {
+        return !!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      } catch (e) {
+        return false;
+      }
+    }
+    function ghostSvg() {
+      if (typeof document === "undefined") {
+        return null;
+      }
+      var scope = null;
+      if (el && typeof el.closest === "function") {
+        scope = el.closest("#mascot");
+      }
+      if (!scope && typeof document.getElementById === "function") {
+        scope = document.getElementById("mascot");
+      }
+      var r = scope || document;
+      return (typeof r.querySelector === "function") ? r.querySelector(".ghost-svg") : null;
+    }
+    function playReaction(cls, ms) {
+      if (prefersReducedMotion()) {
+        return;
+      }
+      var svg = ghostSvg();
+      if (!svg || !svg.classList) {
+        return;
+      }
+      svg.classList.remove(cls);
+      if (typeof svg.getBoundingClientRect === "function") {
+        void svg.getBoundingClientRect();
+      }
+      svg.classList.add(cls);
+      if (typeof setTimeout === "function") {
+        setTimeout(function () {
+          if (svg.classList) {
+            svg.classList.remove(cls);
+          }
+        }, ms);
+      }
+    }
+    function reactSummon() {
+      playReaction("summoning", 650);
+    }
+    function reactBanish() {
+      playReaction("banishing", 750);
+    }
+
     /** Affiche l'état « quiet » (liste vide, Req 6.2, 6.4). */
     function quiet() {
       return render(QUIET);
@@ -140,7 +196,9 @@
       spook: spook,
       current: function () {
         return last;
-      }
+      },
+      reactSummon: reactSummon,
+      reactBanish: reactBanish
     };
   }
 
