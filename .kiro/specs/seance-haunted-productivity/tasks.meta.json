@@ -1,0 +1,539 @@
+{
+  "pbtResults": {
+    "2.3 Test de propriété — rejet des titres composés uniquement d'espaces": {
+      "status": "passed",
+      "lastRunTimestamp": 1793943845874
+    },
+    "2.4 Test de propriété — frontière de 200 caractères": {
+      "status": "passed",
+      "lastRunTimestamp": 1793943855252
+    },
+    "2.2 Test de propriété — invocation d'un titre valide persiste le titre normalisé": {
+      "status": "passed",
+      "lastRunTimestamp": 1793943891306
+    },
+    "2.6 Test de propriété — ordre par identifiant décroissant": {
+      "status": "passed",
+      "lastRunTimestamp": 1793943957745
+    },
+    "2.9 Test de propriété — persistance au redémarrage": {
+      "status": "passed",
+      "lastRunTimestamp": 1793944093669
+    },
+    "2.8 Test de propriété — le bannissement retire la cible et préserve les autres": {
+      "status": "passed",
+      "lastRunTimestamp": 1793944109773
+    },
+    "2.7 Test de propriété — le listing récupère exactement l'ensemble stocké": {
+      "status": "passed",
+      "lastRunTimestamp": 1793944125893
+    },
+    "7.2 Test de propriété — sélection d'un message spooky": {
+      "status": "passed",
+      "lastRunTimestamp": 1793944258090
+    },
+    "7.4 Test de propriété — restauration de la liste après échec de bannissement": {
+      "status": "passed",
+      "lastRunTimestamp": 1793944267968
+    }
+  },
+  "executionHistory": {
+    "1.1 Faire évoluer `init_db` et le schéma de la table `tasks`": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926040678
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926052995
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926173163
+      }
+    ],
+    "2.1 Implémenter `normalize_and_validate`": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926042695
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926181450
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926287637
+      }
+    ],
+    "2.5 Implémenter le dépôt de données (CRUD)": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926043182
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926182068
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926288657
+      }
+    ],
+    "3. Checkpoint — Vérifier la logique métier et les données": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926043377
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926304518
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926321476
+      }
+    ],
+    "4.1 Mettre à jour la route `GET /` (home)": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926043631
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926333335
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926403595
+      }
+    ],
+    "4.2 Mettre à jour la route `POST /summon`": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926043783
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926406853
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793937634774
+      }
+    ],
+    "4.3 Mettre à jour la route `POST /banish/{task_id}`": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926043900
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793937637900
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793941270231
+      }
+    ],
+    "5. Checkpoint — Vérifier les routes serveur": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926044002
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793941275005
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793941436424
+      }
+    ],
+    "6.1 Faire évoluer `Summon_Form`, `Spirit_List` et le bloc d'erreur": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926044111
+      },
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793941444497
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941687586
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941689682
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941701450
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941796836
+      }
+    ],
+    "6.2 Ajouter le conteneur `Ghost_Mascot`": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926044230
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941800473
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941873453
+      }
+    ],
+    "7.1 Implémenter la mascotte (`ghost.js`)": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926044467
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941879085
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942473460
+      }
+    ],
+    "7.3 Implémenter le bannissement client (`banish.js`)": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926044588
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941880486
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942474313
+      }
+    ],
+    "8.1 Régler le thème sombre et le brouillard animé": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926044694
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941881302
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942475283
+      }
+    ],
+    "8.2 Appliquer police, lueur et flottement": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926044860
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942479574
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942536369
+      }
+    ],
+    "8.3 Respecter `prefers-reduced-motion`": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926045000
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942539621
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942586432
+      }
+    ],
+    "9.1 Câbler template, mascotte et bannissement de bout en bout": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926045290
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942590986
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942684069
+      }
+    ],
+    "10. Checkpoint final — Vérifier l'ensemble": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926045493
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942687983
+      },
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942800805
+      }
+    ],
+    "1. Mettre en place le schéma SQLite et l'initialisation robuste": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926173308
+      }
+    ],
+    "2. Implémenter la logique métier pure et l'accès aux données": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793926288767
+      }
+    ],
+    "4. Implémenter les routes FastAPI": [
+      {
+        "executionId": "5ada308a-553c-48a6-8369-bb2bb0f568af",
+        "chatSessionId": "sess_473945f0-a397-4ea5-8170-0cb2dee97024",
+        "timestamp": 1793941270409
+      }
+    ],
+    "6. Mettre à jour le template Jinja2": [
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793941873781
+      }
+    ],
+    "7. Implémenter la logique client (JS vanilla)": [
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942474553
+      }
+    ],
+    "8. Appliquer le thème gothique mesurable (CSS)": [
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942586600
+      }
+    ],
+    "9. Intégration et câblage": [
+      {
+        "executionId": "40078200-20bb-4927-9dc9-a5226452139c",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793942684255
+      }
+    ],
+    "1.2 Écrire les tests unitaires du schéma et de l'initialisation": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943751701
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943980452
+      }
+    ],
+    "2.2 Test de propriété — invocation d'un titre valide persiste le titre normalisé": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943752591
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943981376
+      }
+    ],
+    "2.3 Test de propriété — rejet des titres composés uniquement d'espaces": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943753993
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943982794
+      }
+    ],
+    "2.4 Test de propriété — frontière de 200 caractères": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943755406
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943984150
+      }
+    ],
+    "2.6 Test de propriété — ordre par identifiant décroissant": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943756234
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943984956
+      }
+    ],
+    "2.7 Test de propriété — le listing récupère exactement l'ensemble stocké": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943989247
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944154729
+      }
+    ],
+    "2.8 Test de propriété — le bannissement retire la cible et préserve les autres": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943990560
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944156643
+      }
+    ],
+    "2.9 Test de propriété — persistance au redémarrage": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943992063
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944152508
+      }
+    ],
+    "4.4 Écrire les tests d'exemple HTTP (TestClient)": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943992965
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944153779
+      }
+    ],
+    "9.2 Écrire les tests d'intégration de bout en bout": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793943994186
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944157080
+      }
+    ],
+    "7.2 Test de propriété — sélection d'un message spooky": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944162077
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944287533
+      }
+    ],
+    "7.4 Test de propriété — restauration de la liste après échec de bannissement": [
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944162592
+      },
+      {
+        "executionId": "51bdc8e6-1ece-4455-bd13-0b71e83c12e4",
+        "chatSessionId": "sess_34c2950a-6a8a-4347-8cf9-82d256755b66",
+        "timestamp": 1793944288496
+      }
+    ]
+  }
+}

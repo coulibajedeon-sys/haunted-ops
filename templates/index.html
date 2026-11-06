@@ -23,19 +23,28 @@
       font-size: 1.15rem;
       overflow-x: hidden;
     }
-    /* Brouillard animé */
+    /* Brouillard animé — non interactif, couche de fond (Req 5.2)
+       Opacité oscillant entre 0.3 et 0.6 sur un cycle de 9s (dans 6–12s), en boucle infinie */
     .fog {
       position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      opacity: .3;
       background:
         radial-gradient(40% 30% at 20% 80%, rgba(185,166,255,.12), transparent 70%),
         radial-gradient(35% 25% at 80% 70%, rgba(185,166,255,.10), transparent 70%);
-      animation: drift 18s ease-in-out infinite alternate;
+      animation: drift 18s ease-in-out infinite alternate,
+                 fog-pulse 9s ease-in-out infinite;
     }
     @keyframes drift {
       from { transform: translateX(-4%) scale(1); }
       to   { transform: translateX(4%) scale(1.1); }
     }
+    @keyframes fog-pulse {
+      0%, 100% { opacity: .3; }
+      50%      { opacity: .6; }
+    }
     main { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 6vh 1.2rem 4rem; }
+    /* Titre principal — police hantée + fallback serif dans la même règle (Req 5.3)
+       Lueur ambrée via --glow (#ffb347 ≈ hue 35°, dans 30–50°) (Req 5.4) */
     h1 {
       font-family: "Cinzel Decorative", serif;
       text-align: center; font-size: clamp(2.2rem, 7vw, 3.4rem);
@@ -55,6 +64,7 @@
       border-radius: 10px;
     }
     input:focus { outline: 2px solid var(--glow); }
+    /* Boutons — lueur ambrée (#ffb347 ≈ hue 35°, dans 30–50°) (Req 5.4) */
     button {
       font: inherit; cursor: pointer; padding: .8rem 1.1rem; border-radius: 10px;
       color: #1a1020; background: var(--glow); border: none;
@@ -71,6 +81,7 @@
       animation: float 4s ease-in-out infinite alternate, appear .6s ease-out;
     }
     li:nth-child(even) { animation-delay: -2s, 0s; }
+    /* Flottement vertical des esprits — déplacement 6px (dans 4–8px) sur 4s (dans 3–5s), boucle infinie (Req 5.5) */
     @keyframes float { from { transform: translateY(0); } to { transform: translateY(-6px); } }
     @keyframes appear { from { opacity: 0; filter: blur(6px); } to { opacity: 1; filter: blur(0); } }
     li.banished { animation: vanish .8s ease-in forwards; }
@@ -79,6 +90,29 @@
     }
     li form button { background: transparent; color: var(--spirit); border: 1px solid var(--spirit); box-shadow: none; }
     .empty { text-align: center; opacity: .7; font-style: italic; margin-top: 3rem; }
+    /* Ghost_Mascot — jamais masqué via CSS (Req 6.1) */
+    #mascot {
+      text-align: center; margin: 1.6rem 0 .4rem;
+      display: block; visibility: visible; opacity: 1;
+    }
+    #mascot .ghost {
+      font-size: clamp(2.6rem, 10vw, 3.6rem); line-height: 1;
+      filter: drop-shadow(0 0 14px rgba(185,166,255,.6));
+      animation: bob 4s ease-in-out infinite alternate;
+    }
+    @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+    #mascot-msg {
+      display: block; visibility: visible; opacity: 1;
+      margin-top: .5rem; font-style: italic; color: var(--spirit);
+      min-height: 1.4em; text-shadow: 0 0 10px rgba(185,166,255,.35);
+    }
+    .error, .db-error {
+      margin: 1rem 0 0; padding: .8rem 1rem; border-radius: 10px;
+      background: rgba(140,20,40,.25); border: 1px solid rgba(255,80,110,.5);
+      color: #ffd6de; text-align: center;
+    }
+    input:disabled, button:disabled { opacity: .5; cursor: not-allowed; }
+    button:disabled:hover { transform: none; }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
     }
@@ -90,17 +124,30 @@
     <h1>👻 Séance</h1>
     <p class="tagline">Summon your tasks. Banish them to the beyond.</p>
 
+    <div id="mascot">
+      <span class="ghost" role="img" aria-label="Ghost mascot">👻</span>
+      <p id="mascot-msg" aria-live="polite">{% if not tasks %}The house is quiet… for now.{% else %}The spirits are restless…{% endif %}</p>
+    </div>
+
+    {% if db_error %}
+      <p class="db-error" role="alert">The séance is interrupted: the database is unreachable. Summoning and banishing are disabled.</p>
+    {% endif %}
+
     <form class="summon" method="post" action="/summon">
-      <input name="title" placeholder="Name a spirit to summon..." aria-label="New task" required>
-      <button type="submit">Summon</button>
+      <input name="title" maxlength="200" placeholder="Name a spirit to summon..." aria-label="New task" value="{{ title|default('', true) }}" required{% if db_error %} disabled{% endif %}>
+      <button type="submit"{% if db_error %} disabled{% endif %}>Summon</button>
     </form>
+
+    {% if error %}
+      <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
 
     <ul>
       {% for task in tasks %}
-        <li>
+        <li data-id="{{ task.id }}">
           <span>👻 {{ task.title }}</span>
           <form method="post" action="/banish/{{ task.id }}" class="banish-form">
-            <button type="submit">Banish</button>
+            <button type="submit"{% if db_error %} disabled{% endif %}>Banish</button>
           </form>
         </li>
       {% endfor %}
@@ -110,15 +157,45 @@
     {% endif %}
   </main>
 
+  <!-- Mascotte fantôme (ghost.js) puis câblage, puis bannissement (banish.js).
+       L'ordre est important : ghost.js définit window.Ghost ; le script de
+       colle crée la mascotte et expose window.setQuietMascot/updateMascot ;
+       banish.js (auto-init sur DOMContentLoaded) consomme ces globals. -->
+  <script src="/static/ghost.js"></script>
   <script>
-    document.querySelectorAll(".banish-form").forEach(function (form) {
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        var li = form.closest("li");
-        li.classList.add("banished");
-        setTimeout(function () { form.submit(); }, 750);
-      });
-    });
+    // Câblage de la mascotte au chargement selon la présence d'esprits
+    // (Req 2.3, 6.1). On compte les <li> de la Spirit_List pour décider de
+    // l'état initial (QUIET si vide, message spooky sinon).
+    (function () {
+      "use strict";
+      if (!window.Ghost || typeof window.Ghost.createMascot !== "function") {
+        return; // mascotte indisponible : dégradation gracieuse (Req 6.4)
+      }
+      var mascot = window.Ghost.createMascot();
+      var list = document.querySelector("main ul");
+
+      function spiritCount() {
+        return list ? list.querySelectorAll("li").length : 0;
+      }
+
+      // État initial au chargement (post-summon inclus, car le serveur
+      // re-rend la page après redirection 303).
+      mascot.update(spiritCount());
+
+      // Glue attendue par banish.js (Req 3.6) : bascule « quiet » quand la
+      // liste devient vide, message spooky sinon, après un bannissement.
+      window.setQuietMascot = function () {
+        mascot.quiet();
+      };
+      window.updateMascot = function (state) {
+        if (state && state.empty) {
+          mascot.quiet();
+        } else {
+          mascot.update(spiritCount());
+        }
+      };
+    })();
   </script>
+  <script src="/static/banish.js"></script>
 </body>
 </html>
