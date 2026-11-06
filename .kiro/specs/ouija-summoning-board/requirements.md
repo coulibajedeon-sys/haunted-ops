@@ -28,11 +28,12 @@ This feature adds one cohesive capability on top of the working app without rewr
 
 #### Acceptance Criteria
 
-1. WHEN the main page loads, THE Ouija_Board SHALL render a Character_Arc containing the 26 uppercase letters A through Z and the 10 digits 0 through 9.
-2. WHEN the main page loads, THE Ouija_Board SHALL render three Special_Markers labeled YES, NO, and GOODBYE.
-3. WHEN the main page loads, THE Ouija_Board SHALL render a Planchette as an inline SVG element.
-4. WHEN the main page loads, THE Ouija_Board SHALL render a Summon_Control labeled with English text that submits the Spelled_Name.
-5. THE Ouija_Board SHALL display all visible text in English.
+1. WHEN the main page loads, THE Ouija_Board SHALL render a Character_Arc containing exactly the 26 uppercase letters A through Z and the 10 digits 0 through 9, for a total of 36 distinct, individually selectable characters.
+2. WHEN the main page loads, THE Ouija_Board SHALL render exactly three Special_Markers labeled with the English text YES, NO, and GOODBYE.
+3. WHEN the main page loads, THE Ouija_Board SHALL render a Planchette as an inline SVG element positioned over the Character_Arc.
+4. WHEN the main page loads, THE Ouija_Board SHALL render a Summon_Control labeled with English text that, when activated, submits the current Spelled_Name.
+5. IF the Summon_Control is activated WHILE the Spelled_Name contains zero characters, THEN THE Ouija_Board SHALL reject the submission, retain the current Spelled_Name, and display an error indication that a name is required.
+6. THE Ouija_Board SHALL display all visible text in English.
 
 ### Requirement 2: Build the Spelled Name from Board Interaction
 
@@ -43,8 +44,9 @@ This feature adds one cohesive capability on top of the working app without rewr
 1. WHEN a user activates a character on the Character_Arc, THE Board_Controller SHALL append that character to the Spelled_Name.
 2. WHEN a user activates the YES Special_Marker, THE Board_Controller SHALL append the text "YES" to the Spelled_Name.
 3. WHEN a user activates the NO Special_Marker, THE Board_Controller SHALL append the text "NO" to the Spelled_Name.
-4. WHEN a user activates the GOODBYE Special_Marker, THE Board_Controller SHALL clear the Spelled_Name.
-5. IF appending a character would cause the Spelled_Name length to exceed MAX_TITLE_LENGTH, THEN THE Board_Controller SHALL leave the Spelled_Name unchanged.
+4. WHEN a user activates the GOODBYE Special_Marker, THE Board_Controller SHALL clear the Spelled_Name so that its length is 0 characters.
+5. IF appending the activated character or Special_Marker text would cause the Spelled_Name length to exceed MAX_TITLE_LENGTH, THEN THE Board_Controller SHALL leave the Spelled_Name unchanged.
+6. IF appending the activated character or Special_Marker text would cause the Spelled_Name length to exceed MAX_TITLE_LENGTH, THEN THE Board_Controller SHALL present an indication that the maximum length has been reached.
 
 ### Requirement 3: Move the Planchette to the Spelled Character
 
@@ -52,10 +54,11 @@ This feature adds one cohesive capability on top of the working app without rewr
 
 #### Acceptance Criteria
 
-1. WHEN a character is appended to the Spelled_Name through the Character_Arc, THE Planchette SHALL move to the position of that character on the Character_Arc.
-2. WHILE Reduced_Motion_Preference is not set, THE Planchette SHALL animate its movement between positions.
-3. WHILE Reduced_Motion_Preference is set, THE Planchette SHALL move to the target position without animation.
-4. WHEN a character that is present on the Character_Arc is the most recently added character of the Spelled_Name, THE Planchette SHALL indicate that character's position on the Character_Arc.
+1. WHEN a character that is present on the Character_Arc is appended to the Spelled_Name, THE Planchette SHALL begin moving toward that character's position on the Character_Arc within 100 milliseconds of the append.
+2. WHILE Reduced_Motion_Preference is not set, THE Planchette SHALL animate its movement between the current position and the target position over a duration between 150 and 600 milliseconds.
+3. WHILE Reduced_Motion_Preference is set, THE Planchette SHALL move to the target position without animation, completing the position change within 100 milliseconds.
+4. WHEN the Planchette completes its movement for the most recently added character of the Spelled_Name, THE Planchette SHALL remain centered over that character's position on the Character_Arc until the next character is appended.
+5. IF a character appended to the Spelled_Name is not present on the Character_Arc, THEN THE Planchette SHALL remain at its current position and SHALL NOT change the Spelled_Name position indication.
 
 ### Requirement 4: Accessible Fallback Input Synchronized with the Board
 
@@ -63,11 +66,13 @@ This feature adds one cohesive capability on top of the working app without rewr
 
 #### Acceptance Criteria
 
-1. THE Fallback_Input SHALL be a standard HTML text input with an accessible label in English.
-2. THE Fallback_Input SHALL carry a maxlength attribute equal to MAX_TITLE_LENGTH.
+1. THE Fallback_Input SHALL be a standard HTML text input with a visible text label in English that is programmatically associated with the input so assistive technology announces the label when the input receives focus.
+2. THE Fallback_Input SHALL carry a maxlength attribute whose value equals MAX_TITLE_LENGTH (200).
 3. WHEN the Spelled_Name changes through Ouija_Board interaction, THE Board_Controller SHALL update the Fallback_Input value to equal the Spelled_Name.
-4. WHEN a user edits the Fallback_Input, THE Board_Controller SHALL update the Spelled_Name to equal the Fallback_Input value.
-5. WHEN a user edits the Fallback_Input and the resulting Spelled_Name ends with a character present on the Character_Arc, THE Planchette SHALL indicate that character's position on the Character_Arc.
+4. WHEN a user edits the Fallback_Input and the resulting value length is less than or equal to MAX_TITLE_LENGTH, THE Board_Controller SHALL update the Spelled_Name to equal the Fallback_Input value.
+5. IF a user edits the Fallback_Input to a value whose length exceeds MAX_TITLE_LENGTH, THEN THE Board_Controller SHALL update the Spelled_Name to equal the first MAX_TITLE_LENGTH characters of that value.
+6. WHEN a user edits the Fallback_Input and the resulting Spelled_Name ends with a character present on the Character_Arc, THE Planchette SHALL indicate that character's position on the Character_Arc.
+7. IF a user edits the Fallback_Input and the resulting Spelled_Name is empty or ends with a character not present on the Character_Arc, THEN THE Planchette SHALL remain at its current position on the Character_Arc.
 
 ### Requirement 5: Submit the Spelled Name to the Existing Endpoint
 
@@ -77,8 +82,11 @@ This feature adds one cohesive capability on top of the working app without rewr
 
 1. WHEN a user activates the Summon_Control, THE Board_Controller SHALL submit the Spelled_Name to the Summon_Endpoint using an HTTP POST request.
 2. THE Board_Controller SHALL submit the Spelled_Name in a form field named `title`.
-3. THE Board_Controller SHALL submit a `title` value whose length does not exceed MAX_TITLE_LENGTH.
-4. THE Ouija_Board SHALL preserve the existing Summon_Endpoint contract in which a successful summon responds with an HTTP 303 redirect, an empty or whitespace-only title responds with an HTTP 200 re-render containing an error message, and a title longer than MAX_TITLE_LENGTH responds with HTTP 422.
+3. THE Board_Controller SHALL submit a `title` value whose length is between 1 and MAX_TITLE_LENGTH characters inclusive.
+4. IF the Spelled_Name is empty or contains only whitespace characters WHEN a user activates the Summon_Control, THEN THE Board_Controller SHALL NOT submit a request to the Summon_Endpoint and SHALL display an error indication that a name is required.
+5. WHEN a summon request to the Summon_Endpoint responds with an HTTP 303 redirect, THE Board_Controller SHALL navigate to the redirect target returned by the response.
+6. IF a summon request to the Summon_Endpoint fails to complete or returns a response other than HTTP 303, THEN THE Board_Controller SHALL preserve the current Spelled_Name without clearing it and SHALL display an error indication that the summon did not succeed.
+7. THE Ouija_Board SHALL preserve the existing Summon_Endpoint contract in which a successful summon responds with an HTTP 303 redirect, an empty or whitespace-only title responds with an HTTP 200 re-render containing an error message, and a title longer than MAX_TITLE_LENGTH responds with HTTP 422.
 
 ### Requirement 6: Dark Gothic Theme Consistency
 
@@ -86,10 +94,10 @@ This feature adds one cohesive capability on top of the working app without rewr
 
 #### Acceptance Criteria
 
-1. THE Ouija_Board SHALL apply the candlelight amber glow using the existing `--glow` CSS variable.
+1. THE Ouija_Board SHALL apply the candlelight amber glow to its headings and primary buttons using the existing `--glow` CSS variable.
 2. THE Ouija_Board SHALL use the existing CSS variables `--bg`, `--text`, and `--spirit` for its background, text, and accent colors.
-3. THE Ouija_Board SHALL render its headings and labels using the existing Cinzel Decorative and IM Fell English font families.
-4. THE Ouija_Board SHALL render against the existing fog background layer without hiding that layer.
+3. THE Ouija_Board SHALL render its headings and labels using the existing Cinzel Decorative and IM Fell English font families with a serif fallback.
+4. THE Ouija_Board SHALL render against the existing fog background layer such that the fog layer remains behind the board content and visible.
 
 ### Requirement 7: Preserve the Existing Application
 
@@ -97,7 +105,7 @@ This feature adds one cohesive capability on top of the working app without rewr
 
 #### Acceptance Criteria
 
-1. THE Board_Controller SHALL be served as a static JavaScript file under the `/static` path.
-2. WHERE the Board_Controller is unavailable, THE Fallback_Input SHALL remain usable to submit a task through the Summon_Endpoint.
-3. THE Ouija_Board feature SHALL leave the existing Summon_Endpoint request-handling code unchanged.
-4. THE Ouija_Board feature SHALL leave the existing Python property tests and JavaScript property tests passing.
+1. WHEN a client requests the Board_Controller script under the `/static` path, THE Ouija_Board feature SHALL serve the Board_Controller as a static JavaScript resource with a success response.
+2. IF the Board_Controller is unavailable in the client, THEN THE Fallback_Input SHALL remain usable to submit a task through the Summon_Endpoint such that a valid submitted task is persisted and appears in the task list.
+3. THE Ouija_Board feature SHALL preserve the existing Summon_Endpoint request/response contract unchanged, accepting the same request inputs and producing the same observable responses as before the feature was added.
+4. THE Ouija_Board feature SHALL keep all existing Python property tests and JavaScript property tests passing without any modification to those tests.
