@@ -96,8 +96,20 @@
       background: rgba(185,166,255,.08);
       border: 1px solid rgba(185,166,255,.25); border-radius: 14px;
       animation: float 4s ease-in-out infinite alternate, appear .8s ease-out;
+      /* Phase de flottement INDEPENDANTE par esprit (Req 1.4) : le delai de
+         l'animation `float` est pilote par --float-delay, une valeur NEGATIVE
+         derivee de task.id et posee en inline sur chaque <li> (voir le
+         template). Negatif => chaque icone demarre deja au milieu de son cycle
+         (aucune pause au chargement) et a une phase propre, donc les esprits
+         flottent dechaines les uns des autres. Le 2e delai (0s) s'applique a
+         `appear`, qui doit jouer une seule fois des le rendu (Req 3 / tache 6.1).
+         L'ancien schema a deux phases (li:nth-child(even)) est donc supprime.
+         Regle gardee AU-DESSUS du @media (prefers-reduced-motion) global : le
+         mouvement ne passe QUE par animation/animation-delay (aucun transform
+         statique), donc le mouvement reduit supprime totalement le flottement
+         (Req 1.7, 6.1). */
+      animation-delay: var(--float-delay, 0s), 0s;
     }
-    li:nth-child(even) { animation-delay: -2s, 0s; }
     /* Flottement vertical des esprits — déplacement 6px (dans 4–8px) sur 4s (dans 3–5s), boucle infinie (Req 5.5) */
     @keyframes float { from { transform: translateY(0); } to { transform: translateY(-6px); } }
     /* Polish B (Req 2) : apparition depuis le brouillard — flou vers net,
@@ -155,15 +167,32 @@
     li .spirit { display: flex; align-items: center; gap: .7rem; min-width: 0; }
     /* Mini fantome : corps teinte par --spirit-hue (deterministe/ id),
        lueur spectrale douce. Teinte differente par tache, lisibilite OK. */
-    li .spirit-icon { flex: 0 0 auto; }
+    /* Taille rendue de l'icone (Req 1.2) : on surcharge en CSS les attributs
+       inline width="24" height="28" du <svg> pour que la plus grande dimension
+       (hauteur) tombe dans [52,56]px. On garde le ratio du viewBox 24:28 :
+       48 x (28/24) = 56px de haut, soit 48x56 → plus grande dimension = 56px. */
+    li .spirit-icon { flex: 0 0 auto; width: 48px; height: 56px; }
+    /* Corps teinte par --spirit-hue + lueur douce de MEME teinte (Req 1.3).
+       Le drop-shadow (rayon 8px) est dimensionne pour accompagner l'icone
+       agrandie tout en restant doux. */
     li .spirit-icon-body {
       fill: hsl(var(--spirit-hue, 265) 60% 82%);
-      filter: drop-shadow(0 0 5px hsl(var(--spirit-hue, 265) 70% 75% / .6));
+      filter: drop-shadow(0 0 8px hsl(var(--spirit-hue, 265) 70% 75% / .6));
     }
-    /* Nom de la tache en police gothique (Cinzel Decorative), fallback serif. */
+    /* Nom de la tache (texte saisi par l'utilisateur) en police LISIBLE,
+       distincte de la police gothique de titre (Cinzel Decorative reste sur
+       <h1>/titres uniquement, Req 2.4). On reutilise la meme pile serif gravee
+       que `.ouija .glyph`, avec ligatures/alternatives contextuelles coupees,
+       pour que I/O/1 restent distincts (Req 2.1-2.3). Aucune nouvelle police
+       reseau (Req 8.4). Couleur var(--text) #ece6ff = bon contraste sur le
+       fond de carte rgba(185,166,255,.08) (Req 2.5). */
     li .spirit-name {
-      font-family: "Cinzel Decorative", Georgia, serif;
-      font-size: 1rem; letter-spacing: .01em;
+      font-family: Georgia, "Times New Roman", serif;
+      font-variant: normal;
+      font-variant-ligatures: none;
+      font-feature-settings: "liga" 0, "clig" 0, "calt" 0, "dlig" 0, "hlig" 0, "swsh" 0;
+      color: var(--text);
+      font-size: 1.05rem; letter-spacing: .01em; /* >=16px rendu */
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
@@ -939,10 +968,19 @@
     <ul>
       {% for task in tasks %}
         {# Teinte deterministe par id : hue stable dans [0,360) derive de
-           task.id (purement visuel, Polish B Req 1). data-created porte le
-           timestamp created_at pour le calcul d'age cote client (Req 3). #}
+           task.id (purement visuel, Polish B Req 1). L'expression Jinja
+           `(task.id * 47) % 360` ci-dessous est tenue EN LOCKSTEP avec
+           hueFromId(id) de static/age.js (meme formule) ; c'est l'invariant
+           verifie par la Propriete 1 (Req 1.5, 1.6). data-created porte le
+           timestamp created_at pour le calcul d'age cote client (Req 3).
+           --float-delay : phase de flottement INDEPENDANTE par esprit (Req 1.4),
+           derivee de task.id de maniere deterministe. ((id*37) % 40) / 10 donne
+           un delai dans [0.0, 3.9]s reparti sur ~un cycle de `float` (4s) ;
+           le signe NEGATIF place chaque icone deja au milieu de son cycle (pas
+           de pause de demarrage) a une phase propre. Consomme par la regle CSS
+           `li { animation-delay: var(--float-delay, 0s), 0s; }`. #}
         <li data-id="{{ task.id }}" data-created="{{ task.created_at|default('', true) }}"
-            style="--spirit-hue: {{ (task.id * 47) % 360 }};">
+            style="--spirit-hue: {{ (task.id * 47) % 360 }}; --float-delay: -{{ ((task.id * 37) % 40) / 10 }}s;">
           <span class="spirit">
             {# Mini fantome SVG inline (aucune image externe). Le corps est
                teinte via hsl(var(--spirit-hue)...) pour varier par tache. #}
@@ -1110,43 +1148,24 @@
       };
     })();
   </script>
+  <!-- Polish B (Req 3) : vieillissement PUREMENT VISUEL. L'ancien IIFE inline
+       (parseCreated / ageClass / apply) a ete EXTRAIT dans static/age.js, un
+       module UMD pur et testable (ageBucket / hueFromId / applyAgeClasses).
+       Charge AVANT banish.js, apres ghost.js (meme ordre que board.js/ghost.js). -->
+  <script src="/static/age.js"></script>
   <script>
-    // Polish B (Req 3) : vieillissement PUREMENT VISUEL calcule depuis le
-    // timestamp created_at (data-created). SQLite datetime('now') renvoie
-    // de l'UTC au format "YYYY-MM-DD HH:MM:SS" ; on le normalise en ISO
-    // UTC pour un parsing fiable. Aucune donnee reseau, aucun effet de bord
-    // serveur : on ne fait qu'ajouter des classes CSS (spirit-old / -ancient).
+    // Câblage defensif de age.js (tâche 3.1). age.js s'AUTO-CÂBLE deja au DOM
+    // pret (DOMContentLoaded sinon immediatement) ; applyAgeClasses n'AJOUTE
+    // que des classes de maniere IDEMPOTENTE, donc ce rappel est un simple
+    // filet de securite (re-execution sans effet). Si age.js n'a pas pu etre
+    // charge (window.Age absent), on ne fait rien : les esprits restent
+    // "fresh" (degradation gracieuse, Req 8.3), comme le câblage board/ghost.
     (function () {
       "use strict";
-      if (typeof document === "undefined") { return; }
-      var DAY_MS = 24 * 60 * 60 * 1000;
-      function parseCreated(raw) {
-        if (!raw) { return null; }
-        // "YYYY-MM-DD HH:MM:SS" (UTC) -> "YYYY-MM-DDTHH:MM:SSZ".
-        var iso = String(raw).trim().replace(" ", "T");
-        if (!/[zZ]|[+\-]\d\d:?\d\d$/.test(iso)) { iso += "Z"; }
-        var t = Date.parse(iso);
-        return isNaN(t) ? null : t;
-      }
-      function ageClass(li) {
-        var t = parseCreated(li.getAttribute("data-created"));
-        if (t === null) { return; } // age inconnu -> reste "fresh"
-        var age = Date.now() - t;
-        if (age > 3 * DAY_MS) {
-          li.classList.add("spirit-old", "spirit-ancient");
-        } else if (age > DAY_MS) {
-          li.classList.add("spirit-old");
-        }
-      }
-      function apply() {
-        var items = document.querySelectorAll("main ul li[data-created]");
-        Array.prototype.forEach.call(items, ageClass);
-      }
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", apply);
-      } else {
-        apply();
-      }
+      if (typeof window === "undefined") { return; }
+      var Age = window.Age;
+      if (!Age || typeof Age.applyAgeClasses !== "function") { return; }
+      Age.applyAgeClasses(document, Date.now());
     })();
   </script>
   <script src="/static/banish.js"></script>

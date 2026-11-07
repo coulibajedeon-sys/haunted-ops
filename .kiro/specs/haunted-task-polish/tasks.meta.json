@@ -1,0 +1,255 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Scaffold `static/age.js` and implement `ageBucket(createdAt, now)` and `hueFromId(id)`": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024636609
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024655097
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024864429
+      }
+    ],
+    "1.2 Add the browser-only `applyAgeClasses(root, now)` DOM pass to `static/age.js`": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024638247
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024878785
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024957067
+      }
+    ],
+    "3.1 Replace the inline aging `<script>` IIFE in `templates/index.html` with `age.js` + a tiny wiring call": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024639280
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025240277
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025484281
+      }
+    ],
+    "4.1 Raise the spirit-icon SVG rendered size to 52–56px in `templates/index.html`": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024639935
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024879948
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024959579
+      }
+    ],
+    "4.2 Give each spirit icon an independent float phase (per-id `animation-delay`)": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024640816
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024989682
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025085932
+      }
+    ],
+    "5.1 Rewrite the `li .spirit-name` font block in `templates/index.html`": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024641918
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025092314
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025163673
+      }
+    ],
+    "6.1 Confirm `@keyframes appear` is applied to rendered `<li>` and suppressed under reduced motion": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024642550
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025173116
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025234075
+      }
+    ],
+    "7.1 Confirm the hold/fallback/particle/reduced-motion behavior against Requirement 5 and 6": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024643788
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024656881
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024869102
+      }
+    ],
+    "8.1 Confirm `init_db()` migration is idempotent/non-destructive and `list_spirits` returns `created_at`": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024644455
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024658084
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024866219
+      }
+    ],
+    "9. Final checkpoint — run the full suite and confirm no regressions, no contract change, no new deps": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024645099
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025814235
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794026142955
+      }
+    ],
+    "8. Verify the server `created_at` migration and listing (no schema-contract change)": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024867491
+      }
+    ],
+    "7. Verify the hold-to-banish gesture in `static/banish.js` (no rewrite)": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024869956
+      }
+    ],
+    "1. Create the new `static/age.js` UMD module with the two pure functions": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794024958160
+      }
+    ],
+    "4. CSS: enlarge the spirit icon, add tinted glow, and give each icon an independent float": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025087122
+      }
+    ],
+    "5. CSS: fix the Spirit_Name font to a readable, ligature-free family": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025164636
+      }
+    ],
+    "6. Verify the summon fade-in animation (no rewrite)": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025234765
+      }
+    ],
+    "3. Wire `age.js` into the template (replace the inline aging IIFE)": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025485130
+      }
+    ],
+    "2.1 Write `tests/age.prop.test.js` covering age bucketing": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025502950
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025806058
+      }
+    ],
+    "2.2 Write `tests/hue.prop.test.js` covering hue determinism and range": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025504003
+      },
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025809046
+      }
+    ],
+    "2. Property tests for the pure functions (fast-check, ≥100 runs)": [
+      {
+        "executionId": "28da5f32-a1e7-466b-92b9-f1ef0a1433b4",
+        "chatSessionId": "sess_04516c81-290d-4ead-bfc0-25b6a827a6dc",
+        "timestamp": 1794025807457
+      }
+    ]
+  }
+}
