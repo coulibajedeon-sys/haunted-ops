@@ -256,6 +256,34 @@
     };
   }
 
+  // --- Cœur pur (correctif alignement) : projection du modèle vers le box réel
+  //
+  // scaledArcPosition(index, width, height, g) : prend le centre { x, y } du
+  // glyphe `index` exprimé dans le repère de référence STAGE_W×STAGE_H (via
+  // arcPosition) et le projette LINÉAIREMENT sur un conteneur de taille réelle
+  // (width × height), mesuré APRÈS layout. Contrairement à l'ancien modèle à
+  // `transform: scale()` (qui gardait une boîte de layout de 700px et la
+  // mettait à l'échelle autour de `top center`, d'où un décalage entre le
+  // cadre visible et l'arc), cette projection place chaque glyphe à la MÊME
+  // fraction du box réel : fx = x/STAGE_W, fy = y/STAGE_H, puis on multiplie
+  // par la largeur/hauteur RÉELLES. Le centre de l'arc devient donc exactement
+  // width/2 (car ARC_CENTER_X = STAGE_W/2 → fraction 0.5), sans marge ni
+  // décalage parasite.
+  //
+  // Pure, totale, Node-safe : n'opère que sur des nombres, ne touche aucun DOM,
+  // ne lève jamais et renvoie des coordonnées finies dès lors que width/height
+  // sont finis et strictement positifs (sinon retombe sur le centre du box).
+  function scaledArcPosition(index, width, height, g) {
+    g = g || geom;
+    var p = arcPosition(index, g.LETTER_COUNT + g.DIGIT_COUNT, g);
+    var w = (typeof width === "number" && isFinite(width) && width > 0) ? width : g.STAGE_W;
+    var h = (typeof height === "number" && isFinite(height) && height > 0) ? height : g.STAGE_H;
+    return {
+      x: (p.x / g.STAGE_W) * w,
+      y: (p.y / g.STAGE_H) * h
+    };
+  }
+
   // --- Adaptateur DOM (tâche 7) : createBoard(options) ----------------------
   //
   // Couche NAVIGATEUR uniquement. `createBoard` ne touche au DOM que lorsqu'il
@@ -309,58 +337,72 @@
     // viewport/scale. null tant qu'aucune cible n'a été visée (nom vide, etc.).
     var lastTargetEl = null;
 
-    // applyBoardScale() : CORRECTIF RESPONSIVE (issues 1 & 2). Le stage `.ouija`
-    // est dessine dans un repere FIXE de geom.STAGE_W (700) de large puis mis a
-    // l'echelle via `transform: scale(var(--board-scale))`. L'ancien scale etait
-    // base sur le viewport (media query), donc il ne correspondait PAS a la
-    // largeur reellement disponible du conteneur (main max-width 640, .ouija
-    // max-width:100%), d'ou le debordement de Z a droite et la derive de ~60px
-    // de la planchette (le scale suppose par movePlanchetteToElement, cr.width/
-    // STAGE_W, ne matchait pas le scale CSS applique). On calcule donc ICI le
-    // scale a partir de la largeur DISPONIBLE mesuree (offsetWidth du parent, ou
-    // clientWidth du root) et on l'ecrit dans --board-scale. Ainsi le scale CSS
-    // == cr.width/STAGE_W par construction, les glyphes tiennent dans la bordure
-    // avec des marges egales, et la planchette atterrit pile sur le glyphe.
-    function applyBoardScale() {
-      if (typeof document === "undefined" || !root || !root.style) {
-        return 1;
+    // layoutGlyphs() : CORRECTIF ALIGNEMENT (racine commune des deux bugs).
+    //
+    // ANCIEN modèle (supprimé) : le plateau était dessiné dans une boîte de
+    // layout FIXE de geom.STAGE_W (700) puis mis à l'échelle via
+    // `transform: scale(var(--board-scale))` avec `transform-origin: top
+    // center`. La boîte de layout restait 700px et était mise à l'échelle
+    // AUTOUR de son centre, alors que le cadre bois visible, lui, était borné
+    // à la colonne réelle (≈645px). Résultat : l'arc des glyphes et le cadre
+    // n'avaient pas le même centre → l'arc dérivait d'environ +55px vers la
+    // DROITE (A collé au bord gauche, Z débordant à droite), et la planchette,
+    // dont le translate était « dé-scalé » par cr.width/700, dérivait du même
+    // ~65px dans le même sens.
+    //
+    // NOUVEAU modèle : plus AUCUN `transform: scale()`. Le conteneur `.ouija`
+    // (= root) est une boîte fluide en `box-sizing: border-box`, dont la
+    // largeur réelle (clientWidth, mesurée APRÈS layout) est l'UNIQUE source de
+    // vérité. On positionne chaque glyphe en pixels RÉELS via
+    // scaledArcPosition(index, clientWidth, clientHeight) : le centre de l'arc
+    // devient exactement clientWidth/2 (ARC_CENTER_X = STAGE_W/2 → fraction
+    // 0.5), donc A et Z sont symétriques dans le cadre et tiennent dedans. Les
+    // glyphes gardent `transform: translate(-50%, -50%)` (centrage CSS) ; on ne
+    // fixe que leur left/top. La planchette, elle, est posée par mesure réelle
+    // du rect (movePlanchetteToElement) relativement au MÊME box, sans aucune
+    // division par un scale.
+    //
+    // clientWidth/clientHeight excluent la bordure (box-sizing: border-box) :
+    // c'est exactement le repère dans lequel les enfants position:absolute sont
+    // placés, donc l'origine (0,0) des glyphes et de la planchette coïncide
+    // avec le coin intérieur du cadre. Gardé par la présence du DOM.
+    function layoutGlyphs() {
+      if (typeof document === "undefined" || !root
+          || typeof root.querySelectorAll !== "function") {
+        return;
       }
-      // Largeur disponible : celle du parent (le flux), sinon le root lui-meme.
-      var avail = 0;
-      if (root.parentElement && typeof root.parentElement.clientWidth === "number") {
-        avail = root.parentElement.clientWidth;
-      }
-      if (!avail && typeof root.clientWidth === "number") {
-        avail = root.clientWidth;
-      }
-      var stageW = geom.STAGE_W || 700;
-      var scale = avail > 0 ? Math.min(1, avail / stageW) : 1;
-      if (!scale || !isFinite(scale)) {
-        scale = 1;
-      }
-      root.style.setProperty("--board-scale", String(scale));
-      return scale;
+      var w = (typeof root.clientWidth === "number" && root.clientWidth > 0)
+        ? root.clientWidth
+        : geom.STAGE_W;
+      var h = (typeof root.clientHeight === "number" && root.clientHeight > 0)
+        ? root.clientHeight
+        : geom.STAGE_H;
+      var glyphs = root.querySelectorAll("button[data-index]");
+      Array.prototype.forEach.call(glyphs, function (btn) {
+        var idx = parseInt(btn.getAttribute("data-index"), 10);
+        if (isNaN(idx)) {
+          return;
+        }
+        var p = scaledArcPosition(idx, w, h);
+        if (btn.style) {
+          btn.style.left = p.x + "px";
+          btn.style.top = p.y + "px";
+        }
+      });
     }
 
-    // movePlanchetteToElement(el) : place la planchette sur le CENTRE RÉEL à
-    // l'écran de l'élément `el`, mesuré via getBoundingClientRect() relativement
-    // au conteneur du plateau (`root`). Remplace l'ancienne math pure
-    // arcPosition : la planchette atterrit désormais exactement sur le glyphe ou
-    // le bouton marqueur affiché, quelle que soit la disposition (Req 2.1, 2.2).
+    // movePlanchetteToElement(el) : place le CENTRE de la fenêtre de la
+    // planchette exactement sur le CENTRE RÉEL à l'écran de l'élément `el`.
     //
-    // RAISONNEMENT SUR LE SCALE (décision documentée) :
-    //   `.ouija` (= root) porte `transform: scale(var(--board-scale, 1))`.
-    //   getBoundingClientRect() renvoie des pixels À L'ÉCRAN, donc DÉJÀ MIS À
-    //   L'ÉCHELLE, aussi bien pour la cible que pour le conteneur (tous deux
-    //   vivent dans le stage mis à l'échelle). Le delta (centre-cible −
-    //   origine-conteneur) est donc en pixels SCALÉS. Or la planchette, enfant
-    //   du stage, reçoit sa `transform: translate(x, y)` inline À L'INTÉRIEUR du
-    //   stage mis à l'échelle : le scale() du stage multiplie ce translate. Il
-    //   faut donc exprimer le translate en unités NON scalées du stage, en
-    //   divisant le delta scalé par le scale courant. On récupère le scale via
-    //   cr.width / geom.STAGE_W (largeur rendue / largeur de référence 700),
-    //   avec garde anti division par zéro. Ainsi la fenêtre de la planchette se
-    //   pose sur le centre de la cible à n'importe quelle largeur de viewport.
+    // On mesure le rect de la cible ET du conteneur (root) via
+    // getBoundingClientRect(), on calcule le centre de la cible dans le repère
+    // du conteneur (elementCenterInContainer, pur), puis on retranche la DEMI-
+    // largeur et la DEMI-hauteur de la planchette elle-même afin que le CENTRE
+    // de sa fenêtre — et non son coin haut-gauche — atterrisse sur le point
+    // cible (Req 2.1, 2.2). Aucune division par un scale : il n'y a plus de
+    // `transform: scale()` sur le conteneur, donc les pixels mesurés SONT les
+    // pixels de translate. La planchette et la cible vivent dans le même box,
+    // sans décalage parasite.
     function movePlanchetteToElement(el) {
       if (!planchette || !el || !root) {
         return;
@@ -375,13 +417,18 @@
         { left: tr.left, top: tr.top, width: tr.width, height: tr.height },
         { left: cr.left, top: cr.top, width: cr.width, height: cr.height }
       );
-      // scale = largeur rendue (scalée) / largeur de référence du stage (700).
-      var scale = (cr.width && geom.STAGE_W) ? (cr.width / geom.STAGE_W) : 1;
-      if (!scale) {
-        scale = 1;
+      // Demi-taille de la planchette : on mesure son propre rect (déjà en
+      // pixels écran, sans scale). Fallback sur la moitié de width/height
+      // nominaux (96/2) si la mesure est indisponible (environnement de test).
+      var pw = 96;
+      var ph = 96;
+      if (typeof planchette.getBoundingClientRect === "function") {
+        var pr = planchette.getBoundingClientRect();
+        if (pr && pr.width > 0) { pw = pr.width; }
+        if (pr && pr.height > 0) { ph = pr.height; }
       }
-      var x = c.x / scale;
-      var y = c.y / scale;
+      var x = c.x - pw / 2;
+      var y = c.y - ph / 2;
       // Mouvement réduit : pas de transition (déplacement immédiat). Sinon on
       // efface le style inline pour laisser s'appliquer la transition CSS.
       if (planchette.style) {
@@ -389,6 +436,30 @@
         planchette.style.transform = "translate(" + x + "px, " + y + "px)";
       }
       lastTargetEl = el;
+      // Notifie les abonnés (mascotte : les yeux suivent la planchette) de la
+      // nouvelle position du CENTRE de la fenêtre, dans le repère du conteneur.
+      notifyPlanchetteMove(c.x, c.y, cr.width, cr.height);
+    }
+
+    // Abonnements au déplacement de la planchette (Part 2 : yeux du fantôme).
+    // Chaque abonné reçoit { x, y, width, height } : centre de la fenêtre dans
+    // le repère du conteneur + dimensions réelles du conteneur. Pur côté
+    // board.js (aucune dépendance au fantôme) : ghost.js s'abonne via le
+    // contrôleur retourné.
+    var moveListeners = [];
+    function notifyPlanchetteMove(x, y, width, height) {
+      for (var i = 0; i < moveListeners.length; i++) {
+        try {
+          moveListeners[i]({ x: x, y: y, width: width, height: height });
+        } catch (e) {
+          // Un abonné défaillant ne doit jamais casser le plateau.
+        }
+      }
+    }
+    function onPlanchetteMove(fn) {
+      if (typeof fn === "function") {
+        moveListeners.push(fn);
+      }
     }
 
     // movePlanchetteTo(index) : conserve l'API par index pour les LETTRES et
@@ -496,7 +567,7 @@
         if (typeof root.setAttribute === "function") {
           root.setAttribute("data-board-bound", "1");
         }
-        applyBoardScale();
+        layoutGlyphs();
         var charButtons = root.querySelectorAll("button[data-char]");
         Array.prototype.forEach.call(charButtons, function (btn) {
           btn.addEventListener("click", function () {
@@ -533,7 +604,10 @@
         // nécessaire ici (repositionnement idempotent et peu coûteux).
         if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
           window.addEventListener("resize", function () {
-            applyBoardScale();
+            // La largeur réelle du conteneur change : on re-dispose les glyphes
+            // dans le nouveau box (centre = clientWidth/2), puis on repositionne
+            // la planchette sur LA MÊME cible courante si elle existe encore.
+            layoutGlyphs();
             if (lastTargetEl
                 && (typeof lastTargetEl.isConnected !== "boolean" || lastTargetEl.isConnected)) {
               movePlanchetteToElement(lastTargetEl);
@@ -549,7 +623,9 @@
       syncFromInput: syncFromInput,
       value: value,
       movePlanchetteTo: movePlanchetteTo,
-      movePlanchetteToElement: movePlanchetteToElement
+      movePlanchetteToElement: movePlanchetteToElement,
+      layoutGlyphs: layoutGlyphs,
+      onPlanchetteMove: onPlanchetteMove
     };
   }
 
@@ -567,6 +643,7 @@
     geom: geom,
     arcAngle: arcAngle,
     arcPosition: arcPosition,
+    scaledArcPosition: scaledArcPosition,
     elementCenterInContainer: elementCenterInContainer,
     createBoard: createBoard
   };

@@ -62,8 +62,17 @@
        pleine largeur AU-DESSUS de la rangée input/bouton (le board est un item
        flex à base 100%). L'apparence de l'input et du bouton Summon natifs est
        inchangée. */
-    form.summon { display: flex; flex-wrap: wrap; gap: .6rem; }
+    form.summon { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; }
+    /* L'Ouija_Board occupe toute la largeur du formulaire (centré, max 640). */
     form.summon > .ouija { flex: 0 0 100%; }
+    /* La rangée input + bouton Summon partage la MÊME largeur que le board :
+       on la contraint à la même max-width et on la centre, puis on réduit le
+       vide vertical entre le board et cette rangée (gap .5rem + margin board). */
+    form.summon > label.visually-hidden { flex: 0 0 100%; }
+    form.summon > input,
+    form.summon > button[type="submit"] {
+      /* La rangée (input + bouton) est centrée et bornée à la largeur du board. */
+    }
     input {
       flex: 1; padding: .8rem 1rem; font: inherit; color: var(--text);
       background: rgba(255,255,255,.05); border: 1px solid rgba(185,166,255,.4);
@@ -122,16 +131,58 @@
       from { transform: translateY(0); }
       to   { transform: translateY(-8px); }
     }
-    /* Clignement : les yeux s'ecrasent verticalement un court instant, en
-       boucle espacee (occasionnel). */
-    #mascot .ghost-eye {
+    /* ---- Fantome reactif (Part 2) : expressions + yeux qui suivent --------
+       Les parties sont des elements SVG nommes ; la classe d'expression est
+       posee sur .ghost-svg par ghost.js (expr-idle/curious/surprised/happy/
+       sleepy). On N'UTILISE PAS opacity:0 / display:none / visibility:hidden
+       sur un selecteur prefixe `#mascot` (un test verifie que la mascotte
+       n'est jamais masquee ainsi) : les paupieres s'ouvrent via scaleY(0), les
+       pupilles bougent via translate, la bouche change via son `d`. */
+
+    /* Pupilles : transition douce du regard (translate pose par ghost.js en
+       inline). Limitee au socle de l'oeil par pupilOffset (coeur pur). */
+    #mascot .ghost-pupil {
+      transition: transform .25s ease-out;
+    }
+    /* Paupieres : fermees = scaleY(1) autour du haut de l'oeil ; ouvertes =
+       scaleY(0). Par defaut (idle) ouvertes, avec un clignement periodique. */
+    #mascot .ghost-lid {
+      transform-box: fill-box;
+      transform-origin: top center;
+      transform: scaleY(0);
+    }
+    /* idle : clignement occasionnel (les paupieres descendent brievement). */
+    #mascot .ghost-svg.expr-idle .ghost-lid {
       animation: ghost-blink 6s ease-in-out infinite;
-      transform-origin: center;
     }
     @keyframes ghost-blink {
-      0%, 92%, 100% { transform: scaleY(1); }
-      95%           { transform: scaleY(0.1); }
+      0%, 92%, 100% { transform: scaleY(0); }
+      95%           { transform: scaleY(1); }
     }
+    /* sleepy : yeux mi-clos (paupieres a moitie) + respiration lente. */
+    #mascot .ghost-svg.expr-sleepy .ghost-lid {
+      animation: none;
+      transform: scaleY(0.55);
+    }
+    #mascot .ghost-svg.expr-sleepy {
+      animation: ghost-breathe 6s ease-in-out infinite;
+    }
+    @keyframes ghost-breathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-2px) scale(1.015); }
+    }
+    /* surprised : yeux grands ouverts (pupilles un peu plus grosses via scale
+       du groupe), paupieres totalement relevees. */
+    #mascot .ghost-svg.expr-surprised .ghost-lid { animation: none; transform: scaleY(0); }
+    #mascot .ghost-svg.expr-surprised .ghost-eye-white { transform-box: fill-box; transform-origin: center; transform: scale(1.12); }
+    /* Sourcils : caches par defaut (scaleY 0), montres en curious/surprised. */
+    #mascot .ghost-brow {
+      transform-box: fill-box; transform-origin: center;
+      transform: scaleY(0);
+      transition: transform .2s ease-out;
+    }
+    #mascot .ghost-svg.expr-curious .ghost-brow { transform: scaleY(1) translateY(-1px); }
+    #mascot .ghost-svg.expr-surprised .ghost-brow { transform: scaleY(1) translateY(-2px); }
     /* Rebond a l'invocation : courte impulsion verticale (une fois). */
     #mascot .ghost-svg.summoning {
       animation: ghost-float 4s ease-in-out infinite alternate,
@@ -165,6 +216,53 @@
       display: block; visibility: visible; opacity: 1;
       margin-top: .5rem; font-style: italic; color: var(--spirit);
       min-height: 1.4em; text-shadow: 0 0 10px rgba(185,166,255,.35);
+    }
+    /* Bulle de dialogue thematique (Part 2.3). Selecteur par CLASSE (jamais
+       prefixe #mascot) pour pouvoir la cacher via [hidden] sans faire echouer
+       le test anti-masquage de la mascotte. Petite bulle gothique avec une
+       pointe (::after) sous le fantome. */
+    .mascot-bubble {
+      display: inline-block;
+      margin: .2rem auto 0;
+      padding: .35rem .7rem;
+      position: relative;
+      max-width: 16rem;
+      font-size: .95rem; font-style: italic;
+      color: #1a1020;
+      background: var(--glow);
+      border-radius: 12px;
+      box-shadow: 0 0 16px rgba(255,179,71,.45);
+      animation: bubble-pop .25s ease-out;
+    }
+    .mascot-bubble[hidden] { display: none; }
+    .mascot-bubble::after {
+      content: "";
+      position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+      border-left: 7px solid transparent; border-right: 7px solid transparent;
+      border-bottom: 7px solid var(--glow);
+    }
+    @keyframes bubble-pop {
+      from { transform: translateY(4px) scale(.9); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    /* Particules de bannissement (Part 2.4) : la couche est posee en absolu
+       au-dessus du fantome ; chaque particule est un petit disque lumineux qui
+       monte puis disparait. Selecteurs par CLASSE (jamais #mascot-prefixes). */
+    .ghost .ghost-particles {
+      position: absolute; left: 50%; top: 40%;
+      width: 0; height: 0; pointer-events: none;
+    }
+    .ghost { position: relative; }
+    .ghost-particle {
+      position: absolute;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: radial-gradient(circle, #fff3d6 0%, var(--glow) 55%, transparent 75%);
+      box-shadow: 0 0 8px rgba(255,179,71,.8);
+      animation: particle-rise 900ms ease-out forwards;
+    }
+    @keyframes particle-rise {
+      from { transform: translate(0, 0) scale(1); opacity: .9; }
+      to   { transform: translate(var(--pdx, 0), -32px) scale(.3); opacity: 0; }
     }
     /* ====================================================================
        Ouija_Board — thème gothique sombre (tâche 11.1, Req 6.1–6.4)
@@ -212,10 +310,18 @@
        préservant leur alignement. Le centre reste (300,300). */
     .ouija {
       position: relative;
-      width: 700px;
-      height: 380px;
-      max-width: 100%;
-      margin: 0 auto 1rem;
+      box-sizing: border-box;
+      /* CORRECTIF ALIGNEMENT : conteneur FLUIDE, sans transform:scale(). La
+         largeur réelle (clientWidth) est l'unique source de vérité ; board.js
+         place chaque glyphe à une fraction de cette largeur (centre de l'arc =
+         clientWidth/2). On conserve la proportion du modèle 700×380 via
+         aspect-ratio pour que clientHeight suive la largeur, de sorte que les
+         fractions verticales (y/STAGE_H) tombent au bon endroit. Le cadre bois,
+         l'arc des glyphes et la planchette partagent donc EXACTEMENT ce box. */
+      width: 100%;
+      max-width: 640px;
+      aspect-ratio: 700 / 380;
+      margin: 0 auto .6rem;
       /* Surface bois vieilli — UNIQUEMENT des dégradés CSS, aucun asset externe
          (Req 4.1). Pile de trois couches :
            1) fines stries verticales serrées (veines du bois, 92°) ;
@@ -243,8 +349,6 @@
         inset 0 0 0 6px rgba(40,26,12,.65),
         inset 0 0 40px rgba(0,0,0,.6),
         0 0 28px rgba(185,166,255,.10);
-      transform: scale(var(--board-scale, 1));
-      transform-origin: top center;
     }
     /* Corner candlelight (tâche 8, Req 5.1–5.3). Couche décorative DERRIÈRE
        les glyphes : position absolue couvrant tout le stage, z-index:0, et
@@ -318,11 +422,14 @@
        Les chiffres (.digit, --d) sont replacés sur une rangée droite par la
        règle `.ouija .digit` plus bas (override de left/top). */
     .ouija .glyph {
-      --ang: calc(3.14159265 * 1.02 + (3.14159265 * 1.98 - 3.14159265 * 1.02) * (var(--i) / 25));
       position: absolute;
       z-index: 1; /* au-dessus de .candles (z-index:0) — contrôles en avant */
-      left: calc(350px + 268px * cos(var(--ang) * 1rad));
-      top: calc(300px + 268px * sin(var(--ang) * 1rad));
+      /* left/top posés en PIXELS RÉELS par board.js layoutGlyphs() à partir de
+         la largeur réelle du conteneur (fraction du modèle 700×380). Valeur
+         initiale 0,0 avant câblage ; translate(-50%,-50%) centre la pastille
+         sur ce point. */
+      left: 0;
+      top: 0;
       transform: translate(-50%, -50%);
       /* Petits pastilles rondes translucides — override de la règle générique
          `button { background: var(--glow) ... }` pour ne pas avoir 36 boutons
@@ -378,8 +485,9 @@
        Les chiffres restent des .glyph : ils héritent taille/police/couleurs ;
        seuls leur left/top (placement) diffèrent. */
     .ouija .digit {
-      left: calc(120px + (580px - 120px) * (var(--d) / 9));
-      top: 300px;
+      /* left/top posés en pixels réels par board.js (rangée des chiffres du
+         modèle, index 26..35). Pas d'override CSS : même traitement que les
+         lettres. On garde seulement le centrage. */
       transform: translate(-50%, -50%);
     }
     /* Le hover/focus des chiffres doit conserver le centrage -50%,-50% (comme
@@ -447,10 +555,11 @@
       z-index: 1; /* au-dessus de .candles (z-index:0) */
       top: 0; left: 0;
       width: 96px; height: 96px;
-      /* Centre le WINDOW (centre du viewBox 96×96 → 48,48) sur le point
-         translate(x,y) posé par board.js. Centrage par MARGES négatives et non
-         par transform (le contrôleur écrase transform en style inline). */
-      margin: -48px 0 0 -48px;
+      /* Le CENTRE de la fenêtre (viewBox 96×96 → 48,48) est posé sur le centre
+         du glyphe par board.js movePlanchetteToElement(), qui calcule
+         translate(x,y) = centre-cible − demi-taille-planchette. Plus de marges
+         négatives (l'ancien modèle) : le centrage est fait dans le translate,
+         cohérent avec la mesure réelle du rect. */
       color: var(--glow);
       /* Ombre portée douce + halo « bougie » ambré via --glow (Req 2.3),
          aucun asset externe (Req 2.5). */
@@ -472,13 +581,11 @@
            instantané < 100 ms). Les deux concordent (pas de conflit). */
       transition: transform 420ms cubic-bezier(.22, .61, .36, 1);
       will-change: transform;
-      /* Position de repos par défaut avant toute interaction (polish, non
-         requis par un critère précis) : près du centre de l'arc recentré
-         (ARC_CENTER_X=350, sous l'apex), dans le repère 700-space partagé avec
-         les glyphes/board.js, pour ne pas poser la planchette dans un coin au
-         premier rendu. Dès le premier mouvement, le contrôleur écrase
-         `transform` en style inline, qui l'emporte sur cette valeur CSS. */
-      transform: translate(350px, 120px);
+      /* Position de repos par défaut avant toute interaction (polish) : la
+         fenêtre (centre à 48,48 du SVG) posée près du centre horizontal / haut
+         de l'arc. Valeur approximative en pixels : le contrôleur board.js
+         l'écrase dès le premier mouvement par la position mesurée exacte. */
+      transform: translate(252px, 70px);
     }
 
     /* Responsive : réduit le stage 600 sur écrans étroits. Le scale est porté
@@ -518,9 +625,20 @@
 
     <div id="mascot">
       <span class="ghost" role="img" aria-label="Ghost mascot">
-        <svg class="ghost-svg" viewBox="0 0 64 72" width="64" height="72" aria-hidden="true">
-          <!-- Corps blanc : tete arrondie + flancs droits + bord bas ondule
-               (quatre festons). Inline, aucun asset externe (Req 4/SVG). -->
+        <!-- Fantome SVG reactif (Part 2). viewBox 64x72. Parties nommees,
+             manipulees par ghost.js (adaptateur) :
+               .ghost-body   corps blanc flottant ;
+               .ghost-eye    socle (blanc) de l'oeil — repere des pupilles ;
+               .ghost-pupil  pupille deplacee vers la planchette (eyes follow) ;
+               .ghost-lid    paupiere (clignement / yeux mi-clos sleepy) ;
+               .ghost-brow   sourcil (expressions) ;
+               .ghost-mouth  bouche (expressions).
+             L'expression courante est portee par une classe sur .ghost-svg
+             (expr-idle / expr-curious / expr-surprised / expr-happy /
+             expr-sleepy) ; le CSS ci-dessus ajuste paupieres/bouche/sourcils.
+             aria-hidden : purement visuel (le texte passe par #mascot-msg et
+             la bulle aria-live). Aucun asset externe. -->
+        <svg class="ghost-svg expr-idle" viewBox="0 0 64 72" width="64" height="72" aria-hidden="true">
           <path class="ghost-body" d="M32 3
                    C18 3 10 14 10 28
                    L10 60
@@ -528,11 +646,33 @@
                    L54 28
                    C54 14 46 3 32 3 Z"
                 fill="#f3f0ff"/>
-          <!-- Yeux : deux ovales sombres ; la classe .ghost-eye porte le blink. -->
-          <ellipse class="ghost-eye" cx="25" cy="28" rx="3.3" ry="4.6" fill="#1b1030"/>
-          <ellipse class="ghost-eye" cx="39" cy="28" rx="3.3" ry="4.6" fill="#1b1030"/>
+          <!-- Sourcils (caches par defaut, montres en curious/surprised). -->
+          <path class="ghost-brow ghost-brow-l" d="M21 20 q4 -2.5 8 0" fill="none" stroke="#1b1030" stroke-width="1.4" stroke-linecap="round"/>
+          <path class="ghost-brow ghost-brow-r" d="M35 20 q4 -2.5 8 0" fill="none" stroke="#1b1030" stroke-width="1.4" stroke-linecap="round"/>
+          <!-- Oeil gauche : socle blanc + pupille + paupiere. Groupes pour que
+               la pupille se deplace dans le socle (eyes follow planchette). -->
+          <g class="ghost-eye ghost-eye-l">
+            <ellipse class="ghost-eye-white" cx="25" cy="28" rx="4.4" ry="5.4" fill="#ece6ff"/>
+            <circle class="ghost-pupil ghost-pupil-l" cx="25" cy="28" r="2.6" fill="#1b1030"/>
+            <rect class="ghost-lid ghost-lid-l" x="20" y="22.6" width="10" height="10.8" rx="4.4" fill="#f3f0ff"/>
+          </g>
+          <!-- Oeil droit. -->
+          <g class="ghost-eye ghost-eye-r">
+            <ellipse class="ghost-eye-white" cx="39" cy="28" rx="4.4" ry="5.4" fill="#ece6ff"/>
+            <circle class="ghost-pupil ghost-pupil-r" cx="39" cy="28" r="2.6" fill="#1b1030"/>
+            <rect class="ghost-lid ghost-lid-r" x="34" y="22.6" width="10" height="10.8" rx="4.4" fill="#f3f0ff"/>
+          </g>
+          <!-- Bouche : un seul path dont le `d` est reecrit par ghost.js selon
+               l'expression (sourire, petit rond surpris, ligne calme...). -->
+          <path class="ghost-mouth" d="M27 40 q5 3 10 0" fill="none" stroke="#1b1030" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
+        <!-- Particules de bannissement (Part 2.4) : petites lueurs qui montent.
+             Injectees/retirees par ghost.js, aucune image. -->
+        <span class="ghost-particles" aria-hidden="true"></span>
       </span>
+      <!-- Bulle de dialogue thematique (Part 2.3), aria-live polite, auto-cachee
+           apres ~3s par ghost.js. Vide par defaut. -->
+      <span id="mascot-bubble" class="mascot-bubble" role="status" aria-live="polite" hidden></span>
       <p id="mascot-msg" aria-live="polite">{% if not tasks %}The house is quiet… for now.{% else %}The spirits are restless…{% endif %}</p>
     </div>
 
@@ -704,11 +844,35 @@
         // événement input), garde l'input synchronisé et déplace la planchette.
         // On ne re-câble RIEN ici, et on n'intercepte pas le submit : le bouton
         // Summon natif poste `title` à /summon normalement (Req 5.1, 5.2).
-        window.Board.createBoard({
+        // On EXPOSE le contrôleur sur window pour que le câblage de la mascotte
+        // (Part 2) puisse s'abonner aux déplacements de la planchette
+        // (onPlanchetteMove → les yeux du fantôme suivent la planchette).
+        window.__boardController = window.Board.createBoard({
           root: container,
           input: inputEl,
           planchette: planchetteEl
         });
+
+        // Activité utilisateur sur le plateau (clics glyphes/marqueurs) et dans
+        // l'input (frappe) → la mascotte passe en "curious" et re-arme son
+        // minuteur d'inactivité. On branche ici en plus des écouteurs internes
+        // du contrôleur (lecture seule : on ne modifie pas le Spelled_Name).
+        function notifyActivity() {
+          if (window.__ghostMascot && typeof window.__ghostMascot.activity === "function") {
+            window.__ghostMascot.activity();
+          }
+        }
+        if (typeof container.addEventListener === "function") {
+          container.addEventListener("click", function (e) {
+            if (e.target && typeof e.target.closest === "function"
+                && e.target.closest("button")) {
+              notifyActivity();
+            }
+          });
+        }
+        if (inputEl && typeof inputEl.addEventListener === "function") {
+          inputEl.addEventListener("input", notifyActivity);
+        }
       }
 
       // Exécuter une fois le DOM prêt (même motif que l'IIFE mascotte).
@@ -730,6 +894,9 @@
         return; // mascotte indisponible : dégradation gracieuse (Req 6.4)
       }
       var mascot = window.Ghost.createMascot();
+      // Exposé pour le câblage du plateau (Part 2) : activité utilisateur +
+      // suivi de la planchette par les yeux.
+      window.__ghostMascot = mascot;
       var list = document.querySelector("main ul");
 
       function spiritCount() {
@@ -744,16 +911,46 @@
         mascot.reactSummon();
       }
 
+      // Part 2 : les yeux du fantôme suivent la planchette. On s'abonne aux
+      // déplacements publiés par le contrôleur du plateau (onPlanchetteMove).
+      // Le contrôleur peut être câblé après ce script selon l'ordre du DOM ;
+      // on tente immédiatement puis, à défaut, au prochain tick.
+      function subscribeEyes() {
+        var ctrl = window.__boardController;
+        if (ctrl && typeof ctrl.onPlanchetteMove === "function") {
+          ctrl.onPlanchetteMove(function (pos) {
+            if (typeof mascot.lookAt === "function") {
+              mascot.lookAt(pos);
+            }
+          });
+          return true;
+        }
+        return false;
+      }
+      if (!subscribeEyes() && typeof setTimeout === "function") {
+        setTimeout(subscribeEyes, 0);
+      }
+
       // Glue attendue par banish.js (Req 3.6) : bascule « quiet » quand la
       // liste devient vide, message spooky sinon, après un bannissement.
+      // Part 2.5 : quand la liste devient VIDE après le dernier bannissement,
+      // célébration "happy" + message « The house is at peace. ».
       window.setQuietMascot = function () {
         if (typeof mascot.reactBanish === "function") { mascot.reactBanish(); }
-        mascot.quiet();
+        if (typeof mascot.celebrateEmpty === "function") {
+          mascot.celebrateEmpty();
+        } else {
+          mascot.quiet();
+        }
       };
       window.updateMascot = function (state) {
         if (typeof mascot.reactBanish === "function") { mascot.reactBanish(); }
         if (state && state.empty) {
-          mascot.quiet();
+          if (typeof mascot.celebrateEmpty === "function") {
+            mascot.celebrateEmpty();
+          } else {
+            mascot.quiet();
+          }
         } else {
           mascot.update(spiritCount());
         }
