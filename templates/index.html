@@ -681,6 +681,63 @@
     }
 
     /* ====================================================================
+       Spirit_Reply strip — bande gravée où la réponse de l'oracle s'épelle
+       lettre par lettre. Positionnée en ABSOLU sur le bois, dans la bande
+       BASSE du plateau : au-dessus des marqueurs (bottom: 2.9rem) et sous la
+       rangée des chiffres (y≈79% du stage), donc elle ne chevauche AUCUN
+       glyphe. Centrée horizontalement, largeur bornée pour ne pas toucher les
+       bords ornés. Fond gravé translucide (encoche dans le bois), liseré doré
+       discret. z-index:1 comme les autres contrôles (au-dessus des bougies). */
+    .ouija .spirit-reply {
+      position: absolute;
+      z-index: 1;
+      left: 50%; transform: translateX(-50%);
+      bottom: 2.9rem;
+      max-width: 80%;
+      min-height: 1.5em;
+      padding: .18rem .7rem;
+      display: flex; justify-content: center; align-items: center;
+      flex-wrap: wrap;
+      /* Encoche gravée : creux sombre à liseré doré, ombre interne pour l'effet
+         « taillé dans le bois ». Aucun asset externe. */
+      background: linear-gradient(180deg, rgba(10,6,3,.55), rgba(24,15,7,.45));
+      border: 1px solid rgba(232,195,114,.35);
+      border-radius: 8px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,.6), 0 0 10px rgba(185,166,255,.08);
+      /* Fondu doux de toute la bande après 6 s (classe .fading posée par JS). */
+      opacity: 1;
+      transition: opacity 1.2s ease-out;
+    }
+    .ouija .spirit-reply.fading { opacity: 0; }
+    /* Chaque lettre : gravée en or, masquée par défaut (scale 0 → invisible),
+       révélée (.shown) quand la planchette l'atteint, avec une lueur dorée
+       transitoire (.lit). L'espace garde sa chasse via min-width. */
+    .ouija .spirit-reply .reply-char {
+      display: inline-block;
+      white-space: pre;
+      min-width: .28em;
+      font-family: Georgia, "Times New Roman", "IM Fell English", serif;
+      font-variant-ligatures: none;
+      font-size: clamp(.78rem, 2.6vw, .98rem);
+      letter-spacing: .06em;
+      color: #e8c372;
+      text-shadow: 0 1px 0 rgba(0,0,0,.6);
+      opacity: 0;
+      transform: translateY(2px) scale(.6);
+      transition: opacity .3s ease-out, transform .3s ease-out, text-shadow .3s ease-out;
+    }
+    .ouija .spirit-reply .reply-char.shown {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    /* Lueur dorée brève au moment où la lettre est atteinte (Req : brief
+       golden glow). Retirée ~450 ms plus tard par oracle.js. */
+    .ouija .spirit-reply .reply-char.lit {
+      color: #fff3d6;
+      text-shadow: 0 0 10px var(--glow), 0 0 18px rgba(255,179,71,.7);
+    }
+
+    /* ====================================================================
        Oracle_Board (oracle-board, tâche 3.2) — panneau « Ask the spirits ».
        CSS UNIQUEMENT (aucun markup/JS modifié). Le bloc .oracle est un enfant
        flex de form.summon : on le force en pleine largeur (flex: 0 0 100%)
@@ -689,11 +746,23 @@
        l'arc / des marqueurs / de la planchette (Req 1.2). Petite marge haute
        pour séparer du board. On réutilise les variables de thème (--glow,
        --spirit, --text) ; aucune police/asset externe (Req 10.1, 10.2). */
-    form.summon > .oracle { flex: 0 0 100%; margin-top: .4rem; }
-    /* Les quatre Preset_Questions : rangée flex centrée qui s'enroule sur
-       écran étroit, pour rester nette sous le plateau (Req 1.2). */
+    /* Le panneau Oracle occupe sa propre rangée pleine largeur, DIRECTEMENT
+       sous le plateau, et reprend la MÊME largeur bornée que le board pour que
+       les plaques soient alignées avec lui. */
+    form.summon > .oracle {
+      flex: 0 0 100%;
+      margin: .35rem auto 0;
+      width: 100%;
+      max-width: clamp(18rem, 92vw, 34rem);
+    }
+    /* Les quatre Preset_Questions : grille de plaques gravées placées le long
+       du BAS du plateau, sur toute sa largeur. Par défaut une rangée de 4
+       colonnes égales ; sous 500px, grille 2×2 (voir media query). */
     .oracle-questions {
-      display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .4rem;
+      width: 100%;
     }
     /* Boutons de question : look GRAVÉ assorti aux marqueurs du plateau
        (.ouija .marker) plutôt qu'au gros bouton ambre Summon. Pile serif
@@ -708,23 +777,46 @@
       font-variant: normal;
       font-variant-ligatures: none;
       font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0, "swsh" 0, "calt" 0;
-      font-size: .9rem; letter-spacing: .02em;
-      padding: .5rem 1rem;
+      font-size: clamp(.72rem, 2.1vw, .9rem); letter-spacing: .02em;
+      line-height: 1.2;
+      padding: .55rem .5rem;
+      text-align: center;
+      /* Texte OR gravé (Req 2). */
       color: #e8c372;
       text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,235,180,.25);
-      background: rgba(20,12,6,.4);
-      border: 1px solid rgba(232,195,114,.4);
+      /* Plaque de BOIS : on reprend la MÊME texture que le plateau (stries +
+         bandes + base radiale bois) pour que les plaques « partagent » le bois
+         du board (Req 2). Liseré double doré comme le cadre du plateau. */
+      background:
+        repeating-linear-gradient(92deg,
+          rgba(42,26,14,.55) 0px, rgba(42,26,14,.55) 2px,
+          rgba(26,16,9,.55) 2px,  rgba(26,16,9,.55) 5px),
+        repeating-linear-gradient(88deg,
+          rgba(60,38,20,.25) 0px, rgba(60,38,20,.25) 9px,
+          rgba(30,19,10,.25) 9px, rgba(30,19,10,.25) 18px),
+        radial-gradient(120% 120% at 50% 20%, #3a2614 0%, #241608 60%, #160d05 100%);
+      border: 2px solid #6b4a22;
       border-radius: 10px;
-      box-shadow: none;
-      transition: transform .15s, box-shadow .2s, background .2s, color .2s;
+      box-shadow:
+        inset 0 0 0 1px rgba(232,195,114,.35),
+        inset 0 0 10px rgba(0,0,0,.5);
+      transition: transform .15s, box-shadow .2s, color .2s;
     }
     .oracle-q:hover,
     .oracle-q:focus-visible {
       transform: translateY(-2px);
-      color: #1a1020;
-      background: var(--glow);
-      border-color: var(--glow);
-      box-shadow: 0 0 16px rgba(255,179,71,.55);
+      color: #fff3d6;
+      box-shadow:
+        inset 0 0 0 1px rgba(232,195,114,.6),
+        inset 0 0 10px rgba(0,0,0,.5),
+        0 0 16px rgba(255,179,71,.5);
+    }
+    .oracle-q:disabled {
+      opacity: .5; cursor: not-allowed; transform: none;
+    }
+    /* Sous 500px : grille 2×2 sous le plateau (Req 2). */
+    @media (max-width: 500px) {
+      .oracle-questions { grid-template-columns: repeat(2, 1fr); }
     }
     /* Answer_Region (#oracle-answer) : réponse épelée en texte GRAVÉ/lisible,
        centrée, même pile serif que les marqueurs. min-height réservée pour
@@ -1005,6 +1097,16 @@
           {% endfor %}
         </div>
 
+        <!-- Spirit_Reply strip : bande gravée sur le bois, SOUS l'arc des
+             lettres et AU-DESSUS des marqueurs YES/NO/GOODBYE (ne chevauche
+             aucun glyphe). Pendant l'épellation, oracle.js y pose un
+             <span.reply-char> par caractère et les révèle un à un avec une
+             brève lueur dorée ; la réponse complète y reste puis s'efface
+             doucement après 6 s (classe .fading). PUREMENT VISUEL : l'annonce
+             lecteur d'écran reste #oracle-answer (aria-live). aria-hidden donc,
+             pour ne pas doubler l'annonce. -->
+        <div class="spirit-reply" aria-hidden="true"></div>
+
         <!-- Special_Markers : YES / NO / GOODBYE, libellés en anglais (Req 1.2). -->
         <div class="markers" role="group" aria-label="Special markers">
           <button type="button" class="marker" data-marker="YES">YES</button>
@@ -1251,6 +1353,7 @@
         var oracle = window.Oracle.createOracle({
           buttons: buttons,
           answerRegion: region,
+          replyStrip: document.querySelector(".spirit-reply"),
           input: document.querySelector('input[name="title"]'),
           controller: window.__boardController,
           mascot: window.__ghostMascot

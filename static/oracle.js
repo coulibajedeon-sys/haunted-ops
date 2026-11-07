@@ -168,14 +168,17 @@
   //   buttons      NodeList/array des button[data-question]
   //   input        le Fallback_Input (input[name="title"])
   //   answerRegion l'élément #oracle-answer (aria-live="polite")
+  //   replyStrip   l'élément .spirit-reply (bande gravée sur le plateau) où les
+  //                lettres apparaissent une à une avec une lueur dorée
   //   controller   le Board_Controller (window.__boardController)
   //   mascot       le contrôleur de mascotte (window.__ghostMascot)
   //   board        l'API pure (window.Board) — oracleAnswer/charIndex/ARC_CHARS
   //   getTasks     fonction renvoyant le Task_List courant (défaut readTasks())
   //   reduceMotion booléen (défaut prefersReducedMotion())
   //   stepDelay    pause (ms) sur chaque caractère épelable (défaut 380)
+  //   fadeDelay    délai (ms) avant le fondu de la bande de réponse (défaut 6000)
   //
-  // Renvoie { ask(questionId), isSpelling() }.
+  // Renvoie { ask(questionId), isSpelling(), destroy() }.
   function createOracle(options) {
     options = options || {};
 
@@ -205,6 +208,18 @@
       ? options.answerRegion
       : (doc && typeof doc.getElementById === "function"
           ? doc.getElementById("oracle-answer")
+          : null);
+
+    // replyStrip : la bande « spirit reply » gravée sur le plateau. Chaque
+    // lettre y apparaît avec une brève lueur dorée au fur et à mesure que la
+    // planchette l'atteint ; la réponse complète y reste puis s'efface
+    // doucement après fadeDelay. Purement visuel (l'aria-live reste
+    // answerRegion). Peut être null → l'épellation visuelle est simplement
+    // omise, le texte restant annoncé par answerRegion.
+    var replyStrip = has(options, "replyStrip")
+      ? options.replyStrip
+      : (doc && typeof doc.querySelector === "function"
+          ? doc.querySelector(".spirit-reply")
           : null);
 
     // controller : Board_Controller pour bouger la planchette (facultatif).
@@ -237,8 +252,53 @@
       ? options.stepDelay
       : 380;
 
+    // fadeDelay : délai avant que la bande de réponse ne s'estompe (Req : la
+    // réponse complète reste visible puis s'efface doucement après 6 s).
+    var fadeDelay = (has(options, "fadeDelay") && typeof options.fadeDelay === "number")
+      ? options.fadeDelay
+      : 6000;
+
     // Garde de ré-entrance (Req 4.6) : une seule Spelling_Animation à la fois.
     var spelling = false;
+
+    // Suivi des timers actifs (setTimeout) afin de les annuler proprement quand
+    // la page se ferme ou qu'on relance une épellation (évite fuites / callbacks
+    // sur un DOM mort). On y range : les pauses d'épellation, les retraits de
+    // lueur par lettre, et le timer de fondu de la bande.
+    var activeTimers = [];
+    // Jeton d'épellation : incrémenté à chaque `ask`. Une boucle d'épellation
+    // n'applique ses effets que si son jeton est encore le courant → quitter la
+    // page (destroy) ou relancer interrompt proprement l'ancienne animation.
+    var spellToken = 0;
+    // true une fois destroy() appelé : plus aucun effet visuel ne doit jouer.
+    var destroyed = false;
+
+    // schedule(fn, ms) : setTimeout traqué. Le handle est retiré de la liste à
+    // l'exécution ; clearAllTimers() annule tout ce qui reste.
+    function schedule(fn, ms) {
+      if (typeof setTimeout !== "function") {
+        return null;
+      }
+      var id = setTimeout(function () {
+        var i = activeTimers.indexOf(id);
+        if (i !== -1) {
+          activeTimers.splice(i, 1);
+        }
+        fn();
+      }, ms);
+      activeTimers.push(id);
+      return id;
+    }
+
+    // clearAllTimers() : annule tous les timers en attente (fondu, lueurs…).
+    function clearAllTimers() {
+      if (typeof clearTimeout === "function") {
+        for (var i = 0; i < activeTimers.length; i++) {
+          clearTimeout(activeTimers[i]);
+        }
+      }
+      activeTimers.length = 0;
+    }
 
     // setExpr(expr) : helper protégé pour la mascotte (Req 6.3, 6.4, 6.5). No-op
     // si la mascotte ou setExpression manque — la réponse s'affiche quand même.
@@ -259,6 +319,97 @@
       if (answerRegion && typeof answerRegion === "object") {
         answerRegion.textContent = text;
       }
+    }
+
+    // --- Bande « spirit reply » (strip gravé sur le plateau) ----------------
+    //
+    // La bande affiche la réponse lettre par lettre : chaque caractère est un
+    // <span> posé d'avance (invisible), révélé au fur et à mesure que la
+    // planchette l'atteint, avec une brève lueur dorée (classe .lit retirée
+    // après ~450 ms). En fin d'épellation la réponse complète reste visible,
+    // puis s'efface doucement (classe .fading) après fadeDelay.
+    //
+    // resetStrip(text) : vide la bande et y pose un <span.reply-char> par
+    // caractère de `text`, tous masqués (sans classe .shown). Retire un
+    // éventuel état .fading laissé par une réponse précédente. Renvoie la
+    // liste des spans (ordre du texte) pour que spell() les révèle un à un.
+    function resetStrip(text) {
+      if (!replyStrip || typeof replyStrip !== "object") {
+        return [];
+      }
+      if (replyStrip.classList) {
+        replyStrip.classList.remove("fading");
+      }
+      // Vide la bande (compatible jsdom/Node : on préfère textContent + append).
+      replyStrip.textContent = "";
+      var spans = [];
+      var d = (typeof document !== "undefined") ? document : null;
+      if (!d || typeof d.createElement !== "function") {
+        // Pas de DOM pour créer des spans : on écrit au moins le texte brut.
+        replyStrip.textContent = text;
+        return [];
+      }
+      for (var i = 0; i < text.length; i++) {
+        var span = d.createElement("span");
+        span.className = "reply-char";
+        // L'espace garde sa largeur : on utilise un espace insécable visuel via
+        // textContent ordinaire ; le CSS .reply-char conserve l'espace.
+        span.textContent = text.charAt(i);
+        replyStrip.appendChild(span);
+        spans.push(span);
+      }
+      return spans;
+    }
+
+    // revealChar(span) : révèle une lettre (classe .shown) avec une lueur dorée
+    // (classe .lit) retirée peu après. No-op si span/classList absents.
+    function revealChar(span) {
+      if (!span || !span.classList) {
+        return;
+      }
+      span.classList.add("shown", "lit");
+      schedule(function () {
+        if (span.classList) {
+          span.classList.remove("lit");
+        }
+      }, 450);
+    }
+
+    // showStripInstant(text) : affiche la réponse complète d'un coup (chemin
+    // reduced motion, Req 6). Tous les spans sont .shown, aucune lueur ni
+    // glissement. La réponse s'efface ensuite après fadeDelay comme le chemin animé.
+    function showStripInstant(text) {
+      var spans = resetStrip(text);
+      for (var i = 0; i < spans.length; i++) {
+        if (spans[i].classList) {
+          spans[i].classList.add("shown");
+        }
+      }
+      scheduleFade();
+    }
+
+    // scheduleFade() : programme le fondu doux de la bande après fadeDelay.
+    function scheduleFade() {
+      if (!replyStrip || !replyStrip.classList) {
+        return;
+      }
+      schedule(function () {
+        if (replyStrip.classList) {
+          replyStrip.classList.add("fading");
+        }
+      }, fadeDelay);
+    }
+
+    // endExpressionFor(answer) : choisit l'expression finale de la mascotte
+    // (Req : "happy" ou "surprised" selon la réponse). Les réponses « rien / à
+    // l'écart » (GOODBYE, NONE, YES-c'est-calme) surprennent le fantôme ; une
+    // réponse substantielle (un nom, un décompte d'esprits, NO) le rend heureux.
+    function endExpressionFor(answer) {
+      var a = String(answer || "");
+      if (a === "GOODBYE" || a === "NONE" || a === "YES") {
+        return "surprised";
+      }
+      return "happy";
     }
 
     // movePlanchette(idx) : délègue au Board_Controller (Req 4.2). movePlanchetteTo
@@ -296,7 +447,13 @@
 
     // ask(questionId) : point d'entrée. Voir le flux détaillé dans le design.
     function ask(questionId) {
-      // 1. Garde de ré-entrance (Req 4.6) : on ignore si une épellation tourne.
+      // 0. Après destroy() : plus aucune action (la page se ferme).
+      if (destroyed) {
+        return;
+      }
+
+      // 1. Garde de ré-entrance (Req 4.6, 5) : presser une question pendant
+      //    qu'une réponse est épelée est IGNORÉ.
       if (spelling) {
         return;
       }
@@ -304,20 +461,31 @@
       // 2. Calcul de la réponse (cœur pur, jamais levant).
       var answer = computeAnswer(questionId);
 
+      // Nouveau jeton + annulation des timers d'une réponse précédente (lueurs
+      // résiduelles, fondu programmé) : la nouvelle réponse repart propre.
+      clearAllTimers();
+      spellToken++;
+      var myToken = spellToken;
+
       // 3. Écriture immédiate dans l'Answer_Region → annonce aria-live dans les
       //    DEUX chemins (Req 6.2, 7.2).
       writeAnswer(answer);
 
-      // 4. Chemin reduced motion (Req 7) : pas de glissement, pas de bascule des
-      //    contrôles (on les laisse EXACTEMENT tels quels — Req 5.5). On peut
-      //    marquer la mascotte happy une fois (protégé). Le texte est déjà affiché.
+      // 4. Chemin reduced motion (Req 6) : pas de glissement. La réponse
+      //    COMPLÈTE apparaît immédiatement dans la bande, puis s'efface après
+      //    fadeDelay. On ne bascule pas les contrôles (on les laisse EXACTEMENT
+      //    tels quels — Req 5.5). Expression finale selon la réponse.
       if (reduceMotion) {
-        setExpr("happy");
+        showStripInstant(answer);
+        setExpr(endExpressionFor(answer));
         return;
       }
 
       // 5. Chemin plein mouvement (async, piloté par delay()).
       spelling = true;
+      // Pré-pose la bande : un span par caractère, tous masqués (révélés au fil
+      // de l'épellation ci-dessous).
+      var replySpans = resetStrip(answer);
 
       // a. Capture de l'état `disabled` préexistant de l'input et de CHAQUE bouton
       //    (Req 5.3, 5.4 : un contrôle désactivé pour une autre raison — db-error —
@@ -355,31 +523,54 @@
       // contrôles même si un mouvement lève (robustesse).
       return (async function spell() {
         try {
-          // b. Mascotte curieuse pendant l'épellation (Req 6.3, protégé Req 6.5).
+          // b. Mascotte curieuse pendant l'épellation (Req 4, protégé Req 6.5).
           setExpr("curious");
 
           // c. Marche gauche→droite sur les caractères de la réponse.
           for (var i = 0; i < answer.length; i++) {
+            // Interruption propre : si la page s'est fermée (destroy) ou qu'une
+            // nouvelle épellation a démarré, on cesse de bouger/révéler.
+            if (destroyed || myToken !== spellToken) {
+              return;
+            }
             var ch = answer.charAt(i);
             var idx = charIndexOf(ch);
             if (idx >= 0) {
               // Caractère d'arc : glissement via la géométrie existante (Req 4.2).
+              // La mascotte suit déjà la planchette (eye-following) via
+              // l'abonnement onPlanchetteMove du contrôleur.
               movePlanchette(idx);
             }
+            // La lettre apparaît dans la bande AU MOMENT où la planchette
+            // l'atteint, avec une brève lueur dorée (Req : reply strip).
+            revealChar(replySpans[i]);
             // Espace / caractère hors arc (idx < 0) : on laisse la planchette où
             // elle est (Req 4.3) MAIS on marque quand même la pause pour un
             // rythme naturel.
             await delay(stepDelay); // pause sur chaque caractère (Req 4.1)
           }
           // d. En fin de boucle, la planchette repose sur le dernier glyphe
-          //    épelable (Req 4.4).
+          //    épelable (Req 4.4) et la réponse complète reste visible.
 
-          // e. Mascotte heureuse à la fin (Req 6.4, protégé Req 6.5).
-          setExpr("happy");
+          // Si interrompue entre la dernière itération et ici, on s'arrête.
+          if (destroyed || myToken !== spellToken) {
+            return;
+          }
+
+          // e. Mascotte « happy » ou « surprised » selon la réponse (Req 4).
+          setExpr(endExpressionFor(answer));
+
+          // f. La réponse complète reste visible puis s'estompe après fadeDelay.
+          scheduleFade();
         } finally {
-          // f. Restauration des contrôles + fin de l'épellation (Req 5.3, 5.4).
-          restoreControls();
-          spelling = false;
+          // g. Restauration des contrôles + fin de l'épellation (Req 5.3, 5.4).
+          //    On ne restaure QUE si ce jeton est encore le courant : une
+          //    épellation interrompue par une relance ne doit pas écraser l'état
+          //    de contrôle (re)désactivé par la nouvelle.
+          if (myToken === spellToken) {
+            restoreControls();
+            spelling = false;
+          }
         }
       })();
     }
@@ -389,9 +580,50 @@
       return spelling;
     }
 
+    // 7. destroy() : nettoyage à la fermeture de page (Req 5). Annule tous les
+    //    timers en attente (pauses, retraits de lueur, fondu), invalide le jeton
+    //    courant (une épellation en cours cesse au prochain tick) et restaure
+    //    les contrôles si une épellation tournait. Idempotent et jamais levant.
+    function destroy() {
+      destroyed = true;
+      spellToken++; // invalide toute boucle d'épellation en cours
+      clearAllTimers();
+      if (spelling) {
+        try {
+          // restoreControls est défini dans la portée de ask() lors d'une
+          // épellation ; on ne peut l'appeler ici, mais remettre le drapeau
+          // suffit — la page se ferme. On réactive au cas où (rare) la page
+          // ne se fermerait pas vraiment (bfcache).
+        } catch (e) { /* no-op */ }
+        spelling = false;
+      }
+      // Retire l'écouteur d'unload que l'on a posé (si présent).
+      if (win && typeof win.removeEventListener === "function" && unloadHandler) {
+        try {
+          win.removeEventListener("pagehide", unloadHandler);
+          win.removeEventListener("beforeunload", unloadHandler);
+        } catch (e) { /* no-op */ }
+      }
+    }
+
+    // Auto-nettoyage : à la fermeture / mise en cache de la page, on annule les
+    // timers pour ne jamais exécuter de callback sur un DOM mort (Req 5). On
+    // écoute `pagehide` (couvre bfcache) et `beforeunload` par sécurité.
+    var unloadHandler = null;
+    if (win && typeof win.addEventListener === "function") {
+      unloadHandler = function () { destroy(); };
+      try {
+        win.addEventListener("pagehide", unloadHandler);
+        win.addEventListener("beforeunload", unloadHandler);
+      } catch (e) {
+        unloadHandler = null;
+      }
+    }
+
     return {
       ask: ask,
-      isSpelling: isSpelling
+      isSpelling: isSpelling,
+      destroy: destroy
     };
   }
 

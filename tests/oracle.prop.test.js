@@ -22,6 +22,7 @@ const Board = require("../static/board.js");
 const {
   oracleAnswer,
   sanitizeToAnswer,
+  stripAccents,
   oldestTask,
   makeRng,
   ANSWER_MAX,
@@ -111,17 +112,22 @@ test("Property 2 — oracleAnswer a une longueur <= ANSWER_MAX", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Property 3 — Liste vide (Req 9.4) : pour tasks = [] et TOUT Question_Id
-// (connu comme inconnu), l'answer est exactement "GOODBYE".
+// Property 3 — Liste vide (réponses enrichies) : chaque question a son repli
+// dédié quand il n'y a aucune tâche.
+//   which-first / oldest → "GOODBYE"
+//   count                → "NONE"
+//   quiet                → "YES"
+//   Question_Id inconnu  → règle which-first → "GOODBYE"
 // ---------------------------------------------------------------------------
-test('Property 3 — liste vide → "GOODBYE" pour tout Question_Id', () => {
-  // Ids connus : vérification exhaustive directe.
-  KNOWN_IDS.forEach((id) => {
-    assert.strictEqual(oracleAnswer([], id, 0), "GOODBYE", `vide + ${id}`);
-  });
-  // Ids arbitraires (y compris inconnus) + now arbitraire.
+test("Property 3 — liste vide : repli dédié par question", () => {
+  assert.strictEqual(oracleAnswer([], "which-first", 0), "GOODBYE");
+  assert.strictEqual(oracleAnswer([], "oldest", 0), "GOODBYE");
+  assert.strictEqual(oracleAnswer([], "count", 0), "NONE");
+  assert.strictEqual(oracleAnswer([], "quiet", 0), "YES");
+  // Un Question_Id inconnu suit la règle which-first → "GOODBYE".
   fc.assert(
-    fc.property(questionIdArb, nowArb, (q, now) => {
+    fc.property(fc.string(), nowArb, (q, now) => {
+      fc.pre(KNOWN_IDS.indexOf(q) === -1);
       assert.strictEqual(oracleAnswer([], q, now), "GOODBYE");
     }),
     { numRuns: 200 }
@@ -144,74 +150,119 @@ test("Property 4 — oracleAnswer est déterministe (mêmes arguments → même 
 });
 
 // ---------------------------------------------------------------------------
-// Property 5 — Vérifications concrètes par règle (Req 3.1, 3.2, 3.3, 3.4, 3.6).
+// Property 5 — Vérifications concrètes par règle (réponses enrichies).
+//   which-first → "FIRST " + nom de la plus ancienne tâche, tronqué
+//   oldest      → "OLDEST " + nom de la plus ancienne tâche, tronqué
+//   count       → N + " SPIRIT"/" SPIRITS", "NONE" si 0
+//   quiet       → "YES" si vide, sinon "NO"
 // ---------------------------------------------------------------------------
 
-// 5a. count → String(list.length) pour une liste NON vide (Req 3.3).
-test('Property 5a — "count" renvoie String(list.length) (liste non vide)', () => {
+// 5a. count (liste non vide) → N + " SPIRIT" (N==1) / " SPIRITS" (N>=2).
+test('Property 5a — "count" renvoie N + " SPIRIT(S)" (liste non vide)', () => {
   fc.assert(
     fc.property(taskListArb, nowArb, (tasks, now) => {
       fc.pre(tasks.length > 0);
-      assert.strictEqual(oracleAnswer(tasks, "count", now), String(tasks.length));
+      const n = tasks.length;
+      const expected = String(n) + (n === 1 ? " SPIRIT" : " SPIRITS");
+      assert.strictEqual(oracleAnswer(tasks, "count", now), expected);
+    }),
+    { numRuns: 200 }
+  );
+  // Cas concrets pour la frontière singulier/pluriel.
+  assert.strictEqual(oracleAnswer([{ id: 1, title: "x", created_at: "" }], "count", 0), "1 SPIRIT");
+  assert.strictEqual(
+    oracleAnswer(
+      [{ id: 2, title: "x", created_at: "" }, { id: 1, title: "y", created_at: "" }],
+      "count",
+      0
+    ),
+    "2 SPIRITS"
+  );
+});
+
+// 5b. quiet → "YES" si la liste est vide, sinon "NO".
+test('Property 5b — "quiet" : "YES" si vide, sinon "NO"', () => {
+  assert.strictEqual(oracleAnswer([], "quiet", 0), "YES");
+  fc.assert(
+    fc.property(taskListArb, nowArb, (tasks, now) => {
+      const expected = tasks.length === 0 ? "YES" : "NO";
+      assert.strictEqual(oracleAnswer(tasks, "quiet", now), expected);
     }),
     { numRuns: 200 }
   );
 });
 
-// 5b. quiet → "NO" pour une liste non vide (Req 3.4).
-// Note : la liste vide donne "GOODBYE" (la règle 1 l'emporte sur quiet, voir
-// design.md), donc on ne teste "quiet" QUE sur des listes non vides.
-test('Property 5b — "quiet" renvoie "NO" (liste non vide)', () => {
+// 5c. which-first (liste non vide) → "FIRST " + nom de la PLUS ANCIENNE tâche,
+//     normalisé puis tronqué pour que le tout tienne sous ANSWER_MAX.
+test('Property 5c — "which-first" = "FIRST " + nom de la plus ancienne (tronqué)', () => {
   fc.assert(
     fc.property(taskListArb, nowArb, (tasks, now) => {
       fc.pre(tasks.length > 0);
-      assert.strictEqual(oracleAnswer(tasks, "quiet", now), "NO");
+      const old = oldestTask(tasks);
+      const expected = "FIRST " + sanitizeToAnswer(old.title, ANSWER_MAX - 6);
+      assert.strictEqual(oracleAnswer(tasks, "which-first", now), expected);
     }),
     { numRuns: 200 }
   );
+  // Concret : la plus ancienne (created_at min) est choisie, pas list[0].
+  const dated = [
+    { id: 3, title: "Recent Ghost", created_at: "2003-01-01 00:00:00" },
+    { id: 1, title: "Ancient Ghost", created_at: "2001-01-01 00:00:00" }
+  ];
+  assert.strictEqual(oracleAnswer(dated, "which-first", 0), "FIRST ANCIENT GHOST");
 });
 
-// 5c. which-first dérive de list[0].title (Req 3.1).
-test('Property 5c — "which-first" dérive de sanitizeToAnswer(list[0].title)', () => {
-  fc.assert(
-    fc.property(taskListArb, nowArb, (tasks, now) => {
-      fc.pre(tasks.length > 0);
-      assert.strictEqual(
-        oracleAnswer(tasks, "which-first", now),
-        sanitizeToAnswer(tasks[0].title)
-      );
-    }),
-    { numRuns: 200 }
-  );
-});
-
-// 5d. oldest : avec timestamps explicites → plus petit created_at ;
-//     sans timestamps (tous "") → dernier élément. Listes concrètes fixes.
-test('Property 5d — "oldest" choisit le plus petit created_at, sinon le dernier', () => {
-  // Tous datés : le plus petit created_at (2001-...) gagne.
+// 5d. oldest : plus petit created_at ; sinon dernier élément. Préfixe "OLDEST ".
+test('Property 5d — "oldest" = "OLDEST " + plus ancienne, sinon dernier', () => {
   const dated = [
     { id: 3, title: "Recent Ghost", created_at: "2003-01-01 00:00:00" },
     { id: 2, title: "Middle Ghost", created_at: "2002-01-01 00:00:00" },
     { id: 1, title: "Ancient Ghost", created_at: "2001-01-01 00:00:00" }
   ];
-  assert.strictEqual(oracleAnswer(dated, "oldest", 0), sanitizeToAnswer("Ancient Ghost"));
-  assert.strictEqual(oracleAnswer(dated, "oldest", 0), "ANCIENT GHOST");
+  assert.strictEqual(oracleAnswer(dated, "oldest", 0), "OLDEST ANCIENT GHOST");
 
   // Aucun daté (tous "") : repli sur le dernier élément (ordre id DESC serveur).
   const undated = [
     { id: 3, title: "Newest", created_at: "" },
     { id: 2, title: "Middle", created_at: "" },
-    { id: 1, title: "Oldest By Order", created_at: "" }
+    { id: 1, title: "Last One", created_at: "" }
   ];
-  assert.strictEqual(oracleAnswer(undated, "oldest", 0), sanitizeToAnswer("Oldest By Order"));
-  assert.strictEqual(oracleAnswer(undated, "oldest", 0), "OLDEST BY ORDER");
+  assert.strictEqual(oracleAnswer(undated, "oldest", 0), "OLDEST LAST ONE");
 
-  // Partiellement daté (un created_at manquant) : repli sur le dernier élément.
+  // Partiellement daté : repli sur le dernier élément.
   const partial = [
     { id: 2, title: "Has Date", created_at: "2002-01-01 00:00:00" },
     { id: 1, title: "No Date Last", created_at: "" }
   ];
-  assert.strictEqual(oracleAnswer(partial, "oldest", 0), "NO DATE LAST");
+  assert.strictEqual(oracleAnswer(partial, "oldest", 0), "OLDEST NO DATE LAST");
+});
+
+// 5g. Troncature : un nom très long est coupé pour que le résultat PRÉFIXÉ
+//     reste <= ANSWER_MAX (24). "FIRST " = 6 → nom max 18 ; "OLDEST " = 7 → 17.
+test("Property 5g — troncature : résultat préfixé toujours <= ANSWER_MAX", () => {
+  const longTitle = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; // 36 chars, tout charset
+  const list = [{ id: 1, title: longTitle, created_at: "" }];
+
+  const first = oracleAnswer(list, "which-first", 0);
+  assert.ok(first.length <= ANSWER_MAX, `"${first}" (${first.length}) <= ${ANSWER_MAX}`);
+  assert.strictEqual(first, "FIRST " + longTitle.slice(0, ANSWER_MAX - 6)); // 18 chars de nom
+
+  const oldest = oracleAnswer(list, "oldest", 0);
+  assert.ok(oldest.length <= ANSWER_MAX, `"${oldest}" (${oldest.length}) <= ${ANSWER_MAX}`);
+  assert.strictEqual(oldest, "OLDEST " + longTitle.slice(0, ANSWER_MAX - 7)); // 17 chars de nom
+});
+
+// 5h. Accents : les diacritiques sont dépouillés (é→E, ñ→N, ü→U) et le reste
+//     normalisé. "Café Fantôme" → "CAFE FANTOME".
+test("Property 5h — stripAccents / sanitizeToAnswer : accents retirés", () => {
+  assert.strictEqual(stripAccents("Café Fantôme"), "Cafe Fantome");
+  assert.strictEqual(sanitizeToAnswer("Café Fantôme"), "CAFE FANTOME");
+  assert.strictEqual(sanitizeToAnswer("Ñoño Über"), "NONO UBER");
+  // Via oracleAnswer (which-first) : préfixe + nom sans accents.
+  assert.strictEqual(
+    oracleAnswer([{ id: 1, title: "Café Fantôme", created_at: "" }], "which-first", 0),
+    "FIRST CAFE FANTOME"
+  );
 });
 
 // 5e. oldestTask : égalité de created_at → le plus petit id est le plus ancien.
@@ -231,15 +282,16 @@ test("Property 5e — oldestTask : à created_at égal, le plus petit id est le 
   assert.strictEqual(oldestTask(undefined), undefined);
 });
 
-// 5f. sanitizeToAnswer d'un titre uniquement ponctuation → "A SPIRIT" (Req 3.6).
+// 5f. sanitizeToAnswer d'un titre uniquement ponctuation → "A SPIRIT" (repli).
 test('Property 5f — sanitizeToAnswer d\'un titre ponctuation-only → "A SPIRIT"', () => {
   assert.strictEqual(sanitizeToAnswer("!!! ??? ..."), "A SPIRIT");
   assert.strictEqual(sanitizeToAnswer(""), "A SPIRIT");
   assert.strictEqual(sanitizeToAnswer("   "), "A SPIRIT");
-  // Et via oracleAnswer (which-first) sur un titre ponctuation-only.
+  // Et via oracleAnswer (which-first) sur un titre ponctuation-only :
+  // préfixe "FIRST " + le repli "A SPIRIT".
   assert.strictEqual(
     oracleAnswer([{ id: 1, title: "***", created_at: "" }], "which-first", 0),
-    "A SPIRIT"
+    "FIRST A SPIRIT"
   );
 });
 

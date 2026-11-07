@@ -312,32 +312,51 @@
     "quiet": "Is it quiet?"
   };
 
+  // stripAccents(str) : retire les diacritiques en décomposant en NFD puis en
+  // supprimant les marques combinantes (U+0300–U+036F). PURE/TOTALE. Si
+  // String.prototype.normalize est absent (très anciens runtimes), renvoie la
+  // chaîne telle quelle — le filtrage par charset de sanitizeToAnswer remplacera
+  // de toute façon les caractères restants hors [A-Z0-9] par un espace.
+  function stripAccents(str) {
+    if (typeof str.normalize === "function") {
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+    return str;
+  }
+
   // sanitizeToAnswer(title) : réduit une chaîne utilisateur arbitraire à
   // l'Answer_Charset (Req 3.5, 3.6). PURE et TOTALE — ne lève jamais, ne mute
   // jamais son argument (les chaînes JS sont immuables), accepte n'importe
   // quelle entrée (y compris non-chaîne, via String(...)).
   //
   // Étapes :
-  //   1. Mise en MAJUSCULES via String(title).toUpperCase().
+  //   1. Mise en MAJUSCULES via String(title).toUpperCase(), puis dépouillement
+  //      des accents (é→E, ñ→N…) via stripAccents (décomposition NFD).
   //   2. Remplace chaque séquence de caractères HORS [A-Z0-9] par UN seul
-  //      espace (la ponctuation et les accents deviennent des séparateurs
-  //      plutôt que du bruit).
+  //      espace (la ponctuation et les accents résiduels deviennent des
+  //      séparateurs plutôt que du bruit).
   //   3. Supprime les espaces en tête/queue et réduit les suites internes
   //      d'espaces à un seul (le point 2 produit déjà des espaces simples, mais
   //      le trim des bords reste nécessaire).
-  //   4. Tronque à ANSWER_MAX, puis retire un éventuel espace final laissé par
-  //      la troncature (afin de ne jamais terminer sur un espace parasite).
+  //   4. Tronque à `max` (défaut ANSWER_MAX), puis retire un éventuel espace
+  //      final laissé par la troncature (afin de ne jamais terminer sur un
+  //      espace parasite).
   //   5. Si le résultat est vide (le titre n'avait aucun A–Z/0–9 après
   //      pliage), renvoie le repli non vide, dans le charset, "A SPIRIT"
   //      (Req 3.6).
-  function sanitizeToAnswer(title) {
-    var upper = String(title).toUpperCase();
+  //
+  // `max` est un plafond OPTIONNEL (défaut ANSWER_MAX). Les règles à préfixe
+  // ("FIRST "/"OLDEST ") le passent pour réserver la place du préfixe tout en
+  // garantissant que le résultat FINAL reste <= ANSWER_MAX.
+  function sanitizeToAnswer(title, max) {
+    var cap = (typeof max === "number" && max >= 0) ? max : ANSWER_MAX;
+    var upper = stripAccents(String(title).toUpperCase());
     // Tout run de caractères hors [A-Z0-9] → un espace unique.
     var folded = upper.replace(/[^A-Z0-9]+/g, " ");
     // Trim des bords (les runs internes sont déjà des espaces simples).
     var collapsed = folded.replace(/^ +| +$/g, "");
     // Troncature au plafond, puis retrait d'un espace final laissé par la coupe.
-    var truncated = collapsed.slice(0, ANSWER_MAX).replace(/ +$/g, "");
+    var truncated = collapsed.slice(0, cap).replace(/ +$/g, "");
     if (truncated.length === 0) {
       return "A SPIRIT";
     }
@@ -422,15 +441,20 @@
   // chaîne dans l'Answer_Charset et de longueur <= ANSWER_MAX, sans jamais
   // lever ni muter ses arguments (Req 2.2, 2.3, 2.4, 2.8).
   //
-  // Règles (voir design.md) :
+  // Règles (réponses enrichies, charset A–Z0–9 + espace, max 24) :
   //   0. `tasks` non tableau → liste vide (Req 2.8).
-  //   1. Liste vide → "GOODBYE" pour TOUT Question_Id, y compris inconnu (Req 2.5).
-  //   2. quiet → "NO" (la liste est non vide ici ; le cas vide est déjà traité) (Req 3.4).
-  //   3. count → String(list.length) (chiffres décimaux) (Req 3.3).
-  //   4. which-first → sanitizeToAnswer(list[0].title) (premier dans l'ordre serveur) (Req 3.1).
-  //   5. oldest → sanitizeToAnswer(oldestTask(list).title) (Req 3.2).
-  //   6. Question_Id inconnu → règle which-first (reste total et dans le charset) (Req 2.8).
-  // Le résultat final est plafonné défensivement à ANSWER_MAX via slice (Req 2.4).
+  //   1. which-first → "FIRST " + nom de la PLUS ANCIENNE tâche, tronqué, ou
+  //      "GOODBYE" si la liste est vide. (La tâche à bannir en premier = la
+  //      plus ancienne.)
+  //   2. oldest → "OLDEST " + nom de la plus ancienne tâche, tronqué, ou
+  //      "GOODBYE" si la liste est vide.
+  //   3. count → N + " SPIRIT" (N == 1) ou N + " SPIRITS" (N >= 2), "NONE" si
+  //      la liste est vide.
+  //   4. quiet → "YES" si la liste est vide, sinon "NO".
+  //   5. Question_Id inconnu → règle which-first (reste total et dans le charset).
+  // Les noms sont normalisés via sanitizeToAnswer (MAJUSCULES, accents retirés,
+  // autres caractères → espace) et tronqués pour que le résultat PRÉFIXÉ tienne
+  // sous ANSWER_MAX. Le résultat final est plafonné défensivement à ANSWER_MAX.
   //
   // `now` est accepté pour la stabilité de signature et d'éventuelles règles
   // futures ; les règles actuelles n'en dépendent pas (Req 2.6). `rng` est une
@@ -438,22 +462,40 @@
   // pas besoin et la fonction n'appelle JAMAIS Math.random.
   function oracleAnswer(tasks, questionId, now, rng) {
     var list = Array.isArray(tasks) ? tasks : [];
+    var n = list.length;
     var result;
-    if (list.length === 0) {
-      result = "GOODBYE";
-    } else if (questionId === "quiet") {
-      result = "NO";
+    if (questionId === "quiet") {
+      // Silence du logis : vrai si et seulement si aucune tâche.
+      result = (n === 0) ? "YES" : "NO";
     } else if (questionId === "count") {
-      result = String(list.length);
+      // Décompte des esprits : "NONE", "1 SPIRIT", "2 SPIRITS", …
+      if (n === 0) {
+        result = "NONE";
+      } else {
+        result = String(n) + (n === 1 ? " SPIRIT" : " SPIRITS");
+      }
     } else if (questionId === "oldest") {
-      var old = oldestTask(list);
-      result = sanitizeToAnswer(old ? old.title : "");
+      // Plus ancienne tâche, préfixée "OLDEST " (7 chars → nom tronqué à 17).
+      result = (n === 0)
+        ? "GOODBYE"
+        : "OLDEST " + sanitizeToAnswer(oldestTaskTitle(list), ANSWER_MAX - 7);
     } else {
-      // which-first ET tout Question_Id inconnu (repli sûr, Req 2.8).
-      result = sanitizeToAnswer(list[0] ? list[0].title : "");
+      // which-first ET tout Question_Id inconnu (repli sûr) : la tâche à bannir
+      // en premier est la plus ANCIENNE. Préfixe "FIRST " (6 → nom tronqué à 18).
+      result = (n === 0)
+        ? "GOODBYE"
+        : "FIRST " + sanitizeToAnswer(oldestTaskTitle(list), ANSWER_MAX - 6);
     }
     // Plafond défensif : garantit length <= ANSWER_MAX pour toute entrée.
     return result.slice(0, ANSWER_MAX);
+  }
+
+  // oldestTaskTitle(list) : titre de la plus ancienne tâche, "" si introuvable.
+  // Helper pur extrait pour que which-first et oldest partagent EXACTEMENT la
+  // même sélection (oldestTask), sans dupliquer la garde undefined.
+  function oldestTaskTitle(list) {
+    var old = oldestTask(list);
+    return (old && typeof old.title !== "undefined") ? old.title : "";
   }
 
   // --- Adaptateur DOM (tâche 7) : createBoard(options) ----------------------
@@ -823,6 +865,7 @@
     ANSWER_MAX: ANSWER_MAX,
     ANSWER_CHARSET: ANSWER_CHARSET,
     QUESTIONS: QUESTIONS,
+    stripAccents: stripAccents,
     sanitizeToAnswer: sanitizeToAnswer,
     oldestTask: oldestTask,
     makeRng: makeRng,
