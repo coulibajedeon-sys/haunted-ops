@@ -185,16 +185,26 @@
     DIGIT_ROW_X_START: 120,
     DIGIT_ROW_X_END: 580, // répartis uniformément sur la largeur du plateau
     // --- Point de repos INVISIBLE de l'espace (ouija-space-glyph-digit-row) ---
-    // Lorsqu'une Oracle_Answer contient un espace, la planchette n'a aujourd'hui
-    // AUCUNE cible dédiée (charIndex(" ") === -1). On ajoute un point de repos
-    // invisible, proche du centre de l'arc et sous la bande des lettres : x au
-    // centre horizontal (= ARC_CENTER_X), y aligné sur le centre de l'arc /
-    // rangée des chiffres (= ARC_CENTER_Y = DIGIT_ROW_Y = 300), ce qui le place
-    // sous les lettres (qui chevauchent l'arc avec y <= DIGIT_ROW_Y) et à
-    // l'écart de tout glyphe visible. Aucun glyphe n'est jamais rendu pour ce
-    // point ; l'espace N'EST PAS ajouté à ARC_CHARS (charIndex(" ") reste -1).
+    // Lorsqu'une Oracle_Answer contient un espace, la planchette n'a AUCUNE
+    // cible de glyphe dédiée (charIndex(" ") === -1). On lui donne un point de
+    // repos INVISIBLE : x au centre horizontal (= ARC_CENTER_X = 350), y au
+    // CENTRE de l'arc, JUSTE SOUS les lettres et BIEN AU-DESSUS de la rangée des
+    // chiffres (DIGIT_ROW_Y = 300).
+    //
+    // CORRECTIF (empty-glyph-in-digit-row) : l'ancienne valeur SPACE_REST_Y=300
+    // posait la fenêtre VIDE de la planchette exactement sur la ligne des
+    // chiffres (y=300), à x=350 — c.-à-d. pile entre les chiffres « 4 » (x≈324)
+    // et « 5 » (x≈376). L'anneau doré vide de la planchette ressemblait alors à
+    // un glyphe VIDE inséré dans la rangée des chiffres. On remonte donc le
+    // repos dans l'INTÉRIEUR VIDE de l'arc : à y=170, le point est au milieu
+    // vertical de la bande haute (sommet de l'arc ≈ y=32, bas des lettres
+    // A/Z ≈ y=283), loin de toute lettre (les lettres les plus proches à cette
+    // hauteur sont en x≈122 et x≈578) et nettement au-dessus de la rangée des
+    // chiffres. Aucun glyphe n'est jamais rendu pour ce point ; l'espace N'EST
+    // PAS ajouté à ARC_CHARS (charIndex(" ") reste -1), donc la rangée visible
+    // ne contient toujours que 0..9.
     SPACE_REST_X: 350, // = ARC_CENTER_X (centre horizontal)
-    SPACE_REST_Y: 300 // = ARC_CENTER_Y / DIGIT_ROW_Y, sous la bande des lettres
+    SPACE_REST_Y: 170 // centre de l'arc, sous les lettres, au-dessus des chiffres
   });
 
   // arcAngle(index, count, g) : angle (radians) de la LETTRE située à `index`,
@@ -303,7 +313,9 @@
   // (dans le repère STAGE_W×STAGE_H) et on le place à la MÊME fraction du box
   // réel : x = (SPACE_REST_X / STAGE_W) * w, y = (SPACE_REST_Y / STAGE_H) * h.
   // Comme SPACE_REST_X = ARC_CENTER_X = STAGE_W/2, x vaut exactement w/2 (centre
-  // horizontal) ; y tombe sous la bande des lettres, près du centre de l'arc.
+  // horizontal) ; y (=170) tombe au CENTRE de l'arc, juste sous les lettres et
+  // bien au-dessus de la rangée des chiffres (jamais sur la ligne y=300), donc
+  // la fenêtre vide de la planchette ne se confond plus avec un glyphe chiffre.
   //
   // Mêmes gardes finitude/positivité que scaledArcPosition : si width/height ne
   // sont pas des nombres finis strictement positifs, on retombe sur STAGE_W /
