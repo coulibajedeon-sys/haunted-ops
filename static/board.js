@@ -284,6 +284,178 @@
     };
   }
 
+  // --- Cœur pur (Oracle_Board, tâche 1.1) : réponses de l'oracle ------------
+  //
+  // Feature: oracle-board — le plateau répond lui-même à une Preset_Question en
+  // épelant la réponse. La LOGIQUE de la réponse vit ici, dans le cœur pur de
+  // board.js (aucun DOM, aucun réseau, aucune mutation d'argument), afin d'être
+  // `require()`-able sous Node et couverte par des tests de propriétés. Seules
+  // les constantes et le sanitiseur sont ajoutés ici (tâche 1.1) ; oldestTask,
+  // makeRng et oracleAnswer suivront (tâche 1.2).
+
+  // Answer_Length_Limit : longueur maximale d'une Oracle_Answer (Req 2.4, 3.5).
+  var ANSWER_MAX = 24;
+
+  // Answer_Charset : seuls caractères autorisés dans une Oracle_Answer — les
+  // lettres A–Z, les chiffres 0–9 et l'espace. Aligné sur ARC_CHARS (A–Z0–9)
+  // plus l'espace ; l'espace n'a pas de glyphe et sera simplement sauté par
+  // l'animation (Req 2.3, 4.3).
+  var ANSWER_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+
+  // QUESTIONS : table stable Question_Id ↔ libellé anglais, afin que le gabarit
+  // (templates/index.html) et la fonction s'accordent sur les quatre
+  // Preset_Questions (Req 1.1, 2.1).
+  var QUESTIONS = {
+    "which-first": "Which first?",
+    "oldest": "What is oldest?",
+    "count": "How many spirits?",
+    "quiet": "Is it quiet?"
+  };
+
+  // sanitizeToAnswer(title) : réduit une chaîne utilisateur arbitraire à
+  // l'Answer_Charset (Req 3.5, 3.6). PURE et TOTALE — ne lève jamais, ne mute
+  // jamais son argument (les chaînes JS sont immuables), accepte n'importe
+  // quelle entrée (y compris non-chaîne, via String(...)).
+  //
+  // Étapes :
+  //   1. Mise en MAJUSCULES via String(title).toUpperCase().
+  //   2. Remplace chaque séquence de caractères HORS [A-Z0-9] par UN seul
+  //      espace (la ponctuation et les accents deviennent des séparateurs
+  //      plutôt que du bruit).
+  //   3. Supprime les espaces en tête/queue et réduit les suites internes
+  //      d'espaces à un seul (le point 2 produit déjà des espaces simples, mais
+  //      le trim des bords reste nécessaire).
+  //   4. Tronque à ANSWER_MAX, puis retire un éventuel espace final laissé par
+  //      la troncature (afin de ne jamais terminer sur un espace parasite).
+  //   5. Si le résultat est vide (le titre n'avait aucun A–Z/0–9 après
+  //      pliage), renvoie le repli non vide, dans le charset, "A SPIRIT"
+  //      (Req 3.6).
+  function sanitizeToAnswer(title) {
+    var upper = String(title).toUpperCase();
+    // Tout run de caractères hors [A-Z0-9] → un espace unique.
+    var folded = upper.replace(/[^A-Z0-9]+/g, " ");
+    // Trim des bords (les runs internes sont déjà des espaces simples).
+    var collapsed = folded.replace(/^ +| +$/g, "");
+    // Troncature au plafond, puis retrait d'un espace final laissé par la coupe.
+    var truncated = collapsed.slice(0, ANSWER_MAX).replace(/ +$/g, "");
+    if (truncated.length === 0) {
+      return "A SPIRIT";
+    }
+    return truncated;
+  }
+
+  // --- Cœur pur (Oracle_Board, tâche 1.2) : plus ancienne tâche, PRNG, oracle
+  //
+  // Suite du cœur pur de l'Oracle_Board : oldestTask, makeRng et oracleAnswer.
+  // Toutes PURES et TOTALES — aucun DOM, aucun réseau, aucune mutation
+  // d'argument, ne lèvent jamais, et `require()`-ables sous Node.
+
+  // oldestTask(list) : renvoie la tâche la PLUS ANCIENNE de `list` (Req 3.2).
+  //   - Si CHAQUE tâche possède un `created_at` non vide : renvoie celle dont
+  //     le `created_at` est lexicographiquement le PLUS PETIT. Le texte
+  //     SQLite datetime('now') ("YYYY-MM-DD HH:MM:SS") se trie
+  //     chronologiquement comme simple chaîne, donc une comparaison de chaînes
+  //     suffit (pas de parsing). En cas d'ÉGALITÉ de timestamps, on garde le
+  //     plus petit `id` comme étant le plus ancien (le plus grand `id` est le
+  //     plus récent).
+  //   - Sinon (un `created_at` manquant/vide — cas NULL migré de main.py) :
+  //     renvoie le DERNIER élément de `list`, le plus ancien dans l'ordre de
+  //     rendu `id` DESC du serveur.
+  // Garde défensive : si `list` n'est pas un tableau non vide, renvoie
+  // undefined sans lever (oracleAnswer ne l'appelle que sur une liste non vide,
+  // l'empty étant déjà traité).
+  function oldestTask(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+      return undefined;
+    }
+    // Tous les `created_at` sont-ils présents et non vides ?
+    var allHaveCreatedAt = true;
+    for (var i = 0; i < list.length; i++) {
+      var t = list[i];
+      var c = t && t.created_at;
+      if (typeof c !== "string" || c.length === 0) {
+        allHaveCreatedAt = false;
+        break;
+      }
+    }
+    if (!allHaveCreatedAt) {
+      // Repli : ordre du serveur (id DESC) → le dernier est le plus ancien.
+      return list[list.length - 1];
+    }
+    // Tous datés : plus petit created_at ; égalité → plus petit id.
+    var oldest = list[0];
+    for (var j = 1; j < list.length; j++) {
+      var cand = list[j];
+      if (cand.created_at < oldest.created_at) {
+        oldest = cand;
+      } else if (cand.created_at === oldest.created_at) {
+        // Égalité de timestamps : le plus petit id est le plus ancien.
+        var candId = typeof cand.id === "number" ? cand.id : Infinity;
+        var oldId = typeof oldest.id === "number" ? oldest.id : Infinity;
+        if (candId < oldId) {
+          oldest = cand;
+        }
+      }
+    }
+    return oldest;
+  }
+
+  // makeRng(seed) : petit PRNG déterministe (Mulberry32) renvoyant une fonction
+  // () => number dans [0,1). Utilisé UNIQUEMENT lorsqu'un appelant fournit une
+  // graine (tests ou règles futures) ; la production n'en passe pas, donc le
+  // chemin par défaut n'utilise aucune aléa (déterminisme inconditionnel,
+  // Req 2.6, 2.7). Pur : pour une même graine, produit toujours la même suite.
+  function makeRng(seed) {
+    var a = (seed >>> 0) || 0;
+    return function () {
+      a |= 0;
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // oracleAnswer(tasks, questionId, now, rng) : calcule l'Oracle_Answer de
+  // façon DÉTERMINISTE à partir du Task_List, d'un Question_Id et d'un temps de
+  // référence (Req 2.1). PURE et TOTALE — pour TOUTE entrée elle renvoie une
+  // chaîne dans l'Answer_Charset et de longueur <= ANSWER_MAX, sans jamais
+  // lever ni muter ses arguments (Req 2.2, 2.3, 2.4, 2.8).
+  //
+  // Règles (voir design.md) :
+  //   0. `tasks` non tableau → liste vide (Req 2.8).
+  //   1. Liste vide → "GOODBYE" pour TOUT Question_Id, y compris inconnu (Req 2.5).
+  //   2. quiet → "NO" (la liste est non vide ici ; le cas vide est déjà traité) (Req 3.4).
+  //   3. count → String(list.length) (chiffres décimaux) (Req 3.3).
+  //   4. which-first → sanitizeToAnswer(list[0].title) (premier dans l'ordre serveur) (Req 3.1).
+  //   5. oldest → sanitizeToAnswer(oldestTask(list).title) (Req 3.2).
+  //   6. Question_Id inconnu → règle which-first (reste total et dans le charset) (Req 2.8).
+  // Le résultat final est plafonné défensivement à ANSWER_MAX via slice (Req 2.4).
+  //
+  // `now` est accepté pour la stabilité de signature et d'éventuelles règles
+  // futures ; les règles actuelles n'en dépendent pas (Req 2.6). `rng` est une
+  // source d'aléa seedée OPTIONNELLE (Req 2.7) : les règles livrées n'en ont
+  // pas besoin et la fonction n'appelle JAMAIS Math.random.
+  function oracleAnswer(tasks, questionId, now, rng) {
+    var list = Array.isArray(tasks) ? tasks : [];
+    var result;
+    if (list.length === 0) {
+      result = "GOODBYE";
+    } else if (questionId === "quiet") {
+      result = "NO";
+    } else if (questionId === "count") {
+      result = String(list.length);
+    } else if (questionId === "oldest") {
+      var old = oldestTask(list);
+      result = sanitizeToAnswer(old ? old.title : "");
+    } else {
+      // which-first ET tout Question_Id inconnu (repli sûr, Req 2.8).
+      result = sanitizeToAnswer(list[0] ? list[0].title : "");
+    }
+    // Plafond défensif : garantit length <= ANSWER_MAX pour toute entrée.
+    return result.slice(0, ANSWER_MAX);
+  }
+
   // --- Adaptateur DOM (tâche 7) : createBoard(options) ----------------------
   //
   // Couche NAVIGATEUR uniquement. `createBoard` ne touche au DOM que lorsqu'il
@@ -645,6 +817,16 @@
     arcPosition: arcPosition,
     scaledArcPosition: scaledArcPosition,
     elementCenterInContainer: elementCenterInContainer,
+    // Oracle_Board : cœur pur. Constantes + sanitiseur (tâche 1.1) puis
+    // oldestTask, makeRng et oracleAnswer (tâche 1.2). Aucun export existant
+    // n'est modifié ni renommé.
+    ANSWER_MAX: ANSWER_MAX,
+    ANSWER_CHARSET: ANSWER_CHARSET,
+    QUESTIONS: QUESTIONS,
+    sanitizeToAnswer: sanitizeToAnswer,
+    oldestTask: oldestTask,
+    makeRng: makeRng,
+    oracleAnswer: oracleAnswer,
     createBoard: createBoard
   };
 });

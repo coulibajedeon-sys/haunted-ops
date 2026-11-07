@@ -1,0 +1,220 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add answer constants and the sanitizer": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054335739
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054344237
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054446313
+      }
+    ],
+    "1.2 Add `oldestTask`, `makeRng`, and `oracleAnswer`": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054335973
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054449822
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054560217
+      }
+    ],
+    "1.3 Write the NEW property test suite for the pure core": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054336085
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054584091
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054777190
+      }
+    ],
+    "1.4 Checkpoint — run the JS suite": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054336201
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054781669
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054793286
+      }
+    ],
+    "2.1 Create the UMD skeleton and helpers": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054336313
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054797484
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054901012
+      }
+    ],
+    "2.2 Implement `createOracle(options)` and the `ask` flow": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054336520
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054904512
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055380572
+      }
+    ],
+    "3.1 Add the question buttons and the aria-live answer region": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054336679
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055385285
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055516734
+      }
+    ],
+    "3.2 Add CSS for the oracle panel": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054336784
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055520216
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055640193
+      }
+    ],
+    "3.3 Add the inline glue script after the mascot glue": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054336939
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055643873
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055751727
+      }
+    ],
+    "4.1 Manual verification in the browser": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054337253
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055757705
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055988381
+      }
+    ],
+    "4.2 Run the full test suites and confirm green": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054337432
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055948397
+      },
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055958607
+      }
+    ],
+    "1. Add the pure `oracleAnswer` core to `static/board.js`": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794054793506
+      }
+    ],
+    "2. Build the DOM adapter `static/oracle.js`": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055380691
+      }
+    ],
+    "3. Wire the oracle into `templates/index.html`": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055751837
+      }
+    ],
+    "4. Checkpoint — verify in the browser and run all suites": [
+      {
+        "executionId": "1e24a454-2650-4592-bd2a-349f99ed7763",
+        "chatSessionId": "sess_bf2a4a58-87d8-46de-91b8-bd87de2a0fe6",
+        "timestamp": 1794055988596
+      }
+    ]
+  }
+}

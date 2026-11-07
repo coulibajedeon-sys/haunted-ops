@@ -680,6 +680,68 @@
       outline-offset: 2px;
     }
 
+    /* ====================================================================
+       Oracle_Board (oracle-board, tâche 3.2) — panneau « Ask the spirits ».
+       CSS UNIQUEMENT (aucun markup/JS modifié). Le bloc .oracle est un enfant
+       flex de form.summon : on le force en pleine largeur (flex: 0 0 100%)
+       pour qu'il occupe sa PROPRE rangée SOUS le plateau (form.summon > .ouija
+       est déjà 100%) et AU-DESSUS de la rangée input/bouton Summon, dégagé de
+       l'arc / des marqueurs / de la planchette (Req 1.2). Petite marge haute
+       pour séparer du board. On réutilise les variables de thème (--glow,
+       --spirit, --text) ; aucune police/asset externe (Req 10.1, 10.2). */
+    form.summon > .oracle { flex: 0 0 100%; margin-top: .4rem; }
+    /* Les quatre Preset_Questions : rangée flex centrée qui s'enroule sur
+       écran étroit, pour rester nette sous le plateau (Req 1.2). */
+    .oracle-questions {
+      display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
+    }
+    /* Boutons de question : look GRAVÉ assorti aux marqueurs du plateau
+       (.ouija .marker) plutôt qu'au gros bouton ambre Summon. Pile serif
+       gravée, ligatures coupées, or sur bois sombre translucide, liseré
+       discret, petit lift au survol/focus (transition déjà neutralisée sous
+       prefers-reduced-motion par la règle globale). Override de la règle
+       générique `button { background: var(--glow) ... }`. Le focus clavier
+       reste assuré GRATUITEMENT par la règle globale `button:focus-visible`
+       (anneau or), qu'on NE surcharge PAS (Req 1.4). */
+    .oracle-q {
+      font-family: Georgia, "Times New Roman", "IM Fell English", serif;
+      font-variant: normal;
+      font-variant-ligatures: none;
+      font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0, "swsh" 0, "calt" 0;
+      font-size: .9rem; letter-spacing: .02em;
+      padding: .5rem 1rem;
+      color: #e8c372;
+      text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,235,180,.25);
+      background: rgba(20,12,6,.4);
+      border: 1px solid rgba(232,195,114,.4);
+      border-radius: 10px;
+      box-shadow: none;
+      transition: transform .15s, box-shadow .2s, background .2s, color .2s;
+    }
+    .oracle-q:hover,
+    .oracle-q:focus-visible {
+      transform: translateY(-2px);
+      color: #1a1020;
+      background: var(--glow);
+      border-color: var(--glow);
+      box-shadow: 0 0 16px rgba(255,179,71,.55);
+    }
+    /* Answer_Region (#oracle-answer) : réponse épelée en texte GRAVÉ/lisible,
+       centrée, même pile serif que les marqueurs. min-height réservée pour
+       que l'apparition du texte NE DÉCALE PAS la mise en page (pas de layout
+       shift). Teinte spectrale --spirit + léger text-shadow « taillé », bon
+       contraste sur le fond sombre. */
+    .oracle-answer {
+      margin: .5rem 0 0;
+      min-height: 1.6em;
+      text-align: center;
+      font-family: Georgia, "Times New Roman", "IM Fell English", serif;
+      font-variant-ligatures: none;
+      letter-spacing: .08em;
+      color: var(--spirit);
+      text-shadow: 0 0 10px rgba(185,166,255,.45), 0 1px 0 rgba(0,0,0,.5);
+    }
+
     /* Planchette : positionnée en absolu en haut-gauche du stage ; le
        contrôleur la déplace via transform: translate(x, y) vers le CENTRE du
        glyphe (coords 600-space). On NE met PAS de transform ici (il serait
@@ -951,6 +1013,25 @@
         </div>
       </div>
 
+        <!-- Oracle_Board (oracle-board) : quatre Preset_Questions + Answer_Region.
+             Les boutons sont type="button" → ils ne soumettent JAMAIS le
+             formulaire de summon ; le câblage (window.Oracle.createOracle) arrive
+             en tâche 3.3, le style en tâche 3.2. data-question porte le
+             Question_Id stable attendu par board.oracleAnswer (which-first,
+             oldest, count, quiet) ; les libellés sont en anglais (Req 1.1, 1.3).
+             #oracle-answer est l'Answer_Region aria-live="polite" (role=status)
+             où la réponse épelée est écrite comme texte, pour les lecteurs
+             d'écran (Req 6.1). Même motif que #mascot-bubble déjà présent. -->
+        <div class="oracle" role="group" aria-label="Ask the spirits">
+          <div class="oracle-questions">
+            <button type="button" class="oracle-q" data-question="which-first">Which first?</button>
+            <button type="button" class="oracle-q" data-question="oldest">What is oldest?</button>
+            <button type="button" class="oracle-q" data-question="count">How many spirits?</button>
+            <button type="button" class="oracle-q" data-question="quiet">Is it quiet?</button>
+          </div>
+          <p id="oracle-answer" class="oracle-answer" role="status" aria-live="polite"></p>
+        </div>
+
       <!-- Fallback_Input : input texte standard, accessible, qui reste synchronisé
            au plateau et qui soumet réellement `title`. Label visible en anglais
            associé via for/id (Req 4.1) ; maxlength = MAX_TITLE_LENGTH (Req 4.2).
@@ -1146,6 +1227,45 @@
           mascot.update(spiritCount());
         }
       };
+    })();
+  </script>
+  <!-- Oracle_Board (oracle-board, tâche 3.3) : chargement de oracle.js puis
+       câblage inline. Placé APRÈS la glue mascotte pour que window.__boardController
+       ET window.__ghostMascot existent déjà. Dégradation gracieuse : si
+       window.Oracle est absent, on ne fait rien et le reste de la page continue
+       de fonctionner (Req 6.5, 8.3). Les boutons de question (type="button") ne
+       soumettent jamais le formulaire ; un clic déclenche oracle.ask(Question_Id). -->
+  <script src="/static/oracle.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      if (!window.Oracle || typeof window.Oracle.createOracle !== "function") {
+        return; // oracle indisponible : dégradation gracieuse
+      }
+      function wire() {
+        var buttons = document.querySelectorAll("button[data-question]");
+        var region = document.getElementById("oracle-answer");
+        if (!buttons.length || !region) {
+          return; // markup absent : on ne câble rien
+        }
+        var oracle = window.Oracle.createOracle({
+          buttons: buttons,
+          answerRegion: region,
+          input: document.querySelector('input[name="title"]'),
+          controller: window.__boardController,
+          mascot: window.__ghostMascot
+        });
+        Array.prototype.forEach.call(buttons, function (b) {
+          b.addEventListener("click", function () {
+            oracle.ask(b.getAttribute("data-question"));
+          });
+        });
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", wire);
+      } else {
+        wire();
+      }
     })();
   </script>
   <!-- Polish B (Req 3) : vieillissement PUREMENT VISUEL. L'ancien IIFE inline
