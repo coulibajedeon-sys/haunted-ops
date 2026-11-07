@@ -201,7 +201,7 @@ def summon(request: Request, title: str = Form(...)):
         return _render_index(
             request,
             tasks=[],
-            error="La séance est interrompue : la base est indisponible.",
+            error="The seance is interrupted: the database is unreachable.",
             db_error=True,
             title=title,
         )
@@ -220,7 +220,7 @@ def summon(request: Request, title: str = Form(...)):
         return _render_index(
             request,
             tasks=tasks,
-            error="Le titre de l'esprit ne peut pas être vide.",
+            error="The spirit's name cannot be empty.",
             db_error=db_error,
             title=title,
         )
@@ -229,7 +229,7 @@ def summon(request: Request, title: str = Form(...)):
         # Rejet avec statut HTTP 422 + message de limite (Req 1.6).
         raise HTTPException(
             status_code=422,
-            detail=f"Le titre de l'esprit ne peut pas dépasser {MAX_TITLE_LENGTH} caractères.",
+            detail=f"The spirit's name cannot exceed {MAX_TITLE_LENGTH} characters.",
         )
 
     # Titre valide → insertion puis redirection 303 (Req 1.2, 1.3).
@@ -254,7 +254,7 @@ def banish(task_id: int):
     if not DB_READY:
         raise HTTPException(
             status_code=503,
-            detail="La séance est interrompue : la base est indisponible.",
+            detail="The seance is interrupted: the database is unreachable.",
         )
 
     with closing(get_db()) as conn:
@@ -262,7 +262,7 @@ def banish(task_id: int):
 
     if not deleted:
         # Aucun esprit avec cet identifiant → 404 (Req 3.5).
-        raise HTTPException(status_code=404, detail="Esprit introuvable.")
+        raise HTTPException(status_code=404, detail="Spirit not found.")
 
     # Suppression réussie → 200 JSON pour l'appel fetch (Req 3.1).
     return {"ok": True}
