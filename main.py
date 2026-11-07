@@ -42,8 +42,17 @@ def init_db():
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS tasks ("
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                "title TEXT NOT NULL CHECK (length(title) <= 200))"
+                "title TEXT NOT NULL CHECK (length(title) <= 200), "
+                "created_at TEXT DEFAULT (datetime('now')))"
             )
+            # Migration douce pour une base preexistante creee avant
+            # l'ajout de created_at : on ajoute la colonne si absente.
+            # (SQLite ne permet pas un DEFAULT non-constant via ALTER,
+            # donc la colonne ajoutee est NULL pour les lignes anciennes ;
+            # le rendu traite created_at manquant comme "age inconnu".)
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(tasks)").fetchall()]
+            if "created_at" not in cols:
+                conn.execute("ALTER TABLE tasks ADD COLUMN created_at TEXT")
             conn.commit()
         DB_READY = True
     except sqlite3.Error:
@@ -102,8 +111,16 @@ def list_spirits(conn) -> list[dict]:
     est un dict ``{"id": int, "title": str}``. Lève une exception si la base
     est indisponible (Req 2.6, géré par l'appelant).
     """
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(tasks)").fetchall()]
+    if "created_at" in cols:
+        rows = conn.execute(
+            "SELECT id, title, created_at FROM tasks ORDER BY id DESC"
+        ).fetchall()
+        return [dict(row) for row in rows]
+    # Base sans colonne created_at (anciens schemas / bases de test a deux
+    # colonnes) : on reste compatible en renvoyant created_at=None.
     rows = conn.execute("SELECT id, title FROM tasks ORDER BY id DESC").fetchall()
-    return [dict(row) for row in rows]
+    return [dict(row, created_at=None) for row in rows]
 
 
 def insert_spirit(conn, title: str) -> int:

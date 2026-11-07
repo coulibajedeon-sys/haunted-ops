@@ -165,6 +165,62 @@
     }
   }
 
+  /**
+   * Respecte prefers-reduced-motion (Req 5) : aucune particule / aucun
+   * effet de mouvement additionnel si l'utilisateur le demande. Defensif en
+   * environnement sans matchMedia (tests Node) -> false.
+   */
+  function prefersReducedMotion() {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return false;
+    }
+    try {
+      return !!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Petites particules d'evaporation sur la CARTE bannie (Req 4). Quelques
+   * disques lumineux qui montent puis disparaissent, superposes au <li> en
+   * cours de disparition. Neutralise sous prefers-reduced-motion (Req 5) et
+   * en environnement sans DOM. Aucune image externe (CSS + span).
+   */
+  function spawnCardParticles(li) {
+    if (typeof document === "undefined" || prefersReducedMotion() || !li) {
+      return;
+    }
+    if (typeof document.createElement !== "function") {
+      return;
+    }
+    var layer = document.createElement("span");
+    layer.className = "banish-particles";
+    layer.setAttribute("aria-hidden", "true");
+    var n = 6;
+    for (var i = 0; i < n; i++) {
+      var dot = document.createElement("span");
+      dot.className = "banish-particle";
+      var dx = Math.round((Math.random() * 60) - 30);
+      var delay = Math.round(Math.random() * 140);
+      if (dot.style) {
+        dot.style.setProperty("--pdx", dx + "px");
+        dot.style.left = (10 + Math.random() * 80) + "%";
+        dot.style.animationDelay = delay + "ms";
+      }
+      layer.appendChild(dot);
+    }
+    if (li.style && li.style.position === "") {
+      li.style.position = "relative";
+    }
+    li.appendChild(layer);
+    if (typeof setTimeout === "function") {
+      setTimeout(function () {
+        if (layer && layer.parentNode) { layer.parentNode.removeChild(layer); }
+      }, 1200);
+    }
+  }
+
   /** La Spirit_List est-elle vide (aucun <li> restant) ? */
   function listIsEmpty(listEl) {
     if (!listEl) {
@@ -196,8 +252,11 @@
       : 0;
 
     clearBanishError();
-    // Déclenche l'animation de disparition de 400 ms (Req 3.2).
+    // Déclenche l'animation de disparition de 400 ms (Req 3.2) + petites
+    // particules d'evaporation sur la carte (Polish B Req 4 ; Req 5 gere
+    // dans spawnCardParticles via prefers-reduced-motion).
     li.classList.add("banished");
+    spawnCardParticles(li);
 
     return new Promise(function (resolve) {
       setTimeout(function () {
@@ -259,11 +318,69 @@
         return; // évite les doubles liaisons
       }
       form.setAttribute("data-banish-bound", "1");
+
+      // Fallback ACCESSIBLE (Req 4) : le submit natif (clic souris, Entree
+      // ou Espace au clavier sur le bouton focus) banni toujours. Le geste
+      // "hold to banish" ci-dessous ne fait que l'ANTICIPER sur pointeur ;
+      // il pose suppressNextSubmit pour ne pas bannir deux fois.
+      var suppressNextSubmit = false;
       form.addEventListener("submit", function (event) {
         event.preventDefault();
-        var li = form.closest("li");
-        banishItem(li);
+        if (suppressNextSubmit) {
+          // Un hold vient de declencher le bannissement : on ignore le
+          // click/submit synthetique qui suit le pointerup.
+          suppressNextSubmit = false;
+          return;
+        }
+        banishItem(form.closest("li"));
       });
+
+      // --- Hold to banish sur peripheriques a pointeur (Req 4) -----------
+      // Maintenir le bouton ~650 ms declenche le bannissement, avec un
+      // remplissage visuel (.holding -> --hold-progress anime en CSS). Un
+      // appui bref (relache avant le seuil) annule le geste et laisse le
+      // clic normal faire le fallback. Le clavier n'emet pas d'evenements
+      // pointer : Entree/Espace passent donc par le submit (fallback).
+      var btn = form.querySelector("button[type=\"submit\"], button");
+      if (btn && typeof btn.addEventListener === "function"
+          && typeof window !== "undefined" && "PointerEvent" in window) {
+        var HOLD_MS = 650;
+        var holdTimer = null;
+        var held = false;
+        function clearHold() {
+          if (holdTimer) {
+            if (typeof clearTimeout === "function") { clearTimeout(holdTimer); }
+            holdTimer = null;
+          }
+          if (btn.classList) { btn.classList.remove("holding"); }
+        }
+        btn.addEventListener("pointerdown", function (e) {
+          // Bouton principal uniquement ; ignore si desactive.
+          if (btn.disabled || (typeof e.button === "number" && e.button !== 0)) {
+            return;
+          }
+          held = false;
+          if (btn.classList) { btn.classList.add("holding"); }
+          if (typeof setTimeout === "function") {
+            holdTimer = setTimeout(function () {
+              held = true;
+              suppressNextSubmit = true; // le click suivant sera ignore
+              clearHold();
+              banishItem(form.closest("li"));
+            }, HOLD_MS);
+          }
+        });
+        // Relache avant le seuil -> annule ; le click natif fera le fallback.
+        btn.addEventListener("pointerup", function (e) {
+          if (held) {
+            // Le hold a deja banni : empeche le click synthetique.
+            if (typeof e.preventDefault === "function") { e.preventDefault(); }
+          }
+          clearHold();
+        });
+        btn.addEventListener("pointerleave", clearHold);
+        btn.addEventListener("pointercancel", clearHold);
+      }
     });
   }
 
