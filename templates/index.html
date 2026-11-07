@@ -681,32 +681,60 @@
     }
 
     /* ====================================================================
-       Spirit_Reply strip — bande gravée où la réponse de l'oracle s'épelle
-       lettre par lettre. Positionnée en ABSOLU sur le bois, dans la bande
-       BASSE du plateau : au-dessus des marqueurs (bottom: 2.9rem) et sous la
-       rangée des chiffres (y≈79% du stage), donc elle ne chevauche AUCUN
-       glyphe. Centrée horizontalement, largeur bornée pour ne pas toucher les
-       bords ornés. Fond gravé translucide (encoche dans le bois), liseré doré
-       discret. z-index:1 comme les autres contrôles (au-dessus des bougies). */
+       Spirit_Reply strip — fenêtre gravée où la réponse de l'oracle s'épelle
+       lettre par lettre.
+
+       PLACEMENT (correctif empty-reply-in-digit-row) : positionnée en ABSOLU
+       dans l'AIRE CENTRALE VIDE du plateau, SOUS l'arc des lettres et AU-DESSUS
+       de la rangée des chiffres (digit row à y≈79% du stage, marqueurs plus
+       bas). On centre son MILIEU vertical à 42% de la hauteur du plateau (via
+       top + translate(-50%,-50%)) : à cette hauteur l'intérieur de l'arc est
+       vide (les lettres les plus proches sont loin sur les côtés), donc la
+       fenêtre ne chevauche NI l'arc, NI les chiffres, NI YES/NO/GOODBYE, à
+       toutes les largeurs (le plateau garde son aspect-ratio 700/380, donc 42%
+       reste proportionnel en desktop ≈680px comme en mobile ≈390px).
+
+       REPOS INVISIBLE (Req 1) : au repos (aucune réponse), le <div> est VIDE —
+       tout le « chrome » gravé (fond, bordure, ombre, padding) est posé UNIQUE-
+       MENT via :not(:empty), de sorte qu'un strip vide n'affiche RIEN (plus
+       d'anneau/pilule sombre entre « 4 » et « 5 »). Le chrome n'apparaît que
+       pendant l'épellation (spans .reply-char présents) et reste durant le
+       fondu de 6 s (classe .fading → opacity 0). La HAUTEUR est réservée en
+       permanence (min-height) ; comme l'élément est hors flux (position:
+       absolute), son apparition ne décale JAMAIS la mise en page.
+
+       z-index : 1 comme les autres contrôles (au-dessus des bougies) mais la
+       planchette passe à z-index:2 pour rester DEVANT la fenêtre de réponse. */
     .ouija .spirit-reply {
       position: absolute;
       z-index: 1;
-      left: 50%; transform: translateX(-50%);
-      bottom: 2.9rem;
-      max-width: 80%;
+      left: 50%; top: 42%;
+      transform: translate(-50%, -50%);
+      /* Largeur bornée au CANAL CENTRAL dégagé de l'arc à cette hauteur : à
+         y≈42% les lettres les plus proches sont loin sur les côtés (x≈17% et
+         x≈83%), donc 56% garde la fenêtre (≈22%–78%) à l'écart des lettres,
+         des chiffres et des marqueurs. Les réponses sont courtes (<=24 car.,
+         petite police), 56% suffit largement. */
+      max-width: 56%;
       min-height: 1.5em;
-      padding: .18rem .7rem;
+      min-width: 1.5em;
       display: flex; justify-content: center; align-items: center;
       flex-wrap: wrap;
-      /* Encoche gravée : creux sombre à liseré doré, ombre interne pour l'effet
-         « taillé dans le bois ». Aucun asset externe. */
+      pointer-events: none; /* purement décoratif : ne bloque jamais un glyphe */
+      /* Fondu doux de toute la fenêtre après 6 s (classe .fading posée par JS). */
+      opacity: 1;
+      transition: opacity 1.2s ease-out;
+    }
+    /* Chrome gravé posé UNIQUEMENT quand la fenêtre porte du texte (Req 1) :
+       encoche sombre à liseré doré, ombre interne « taillée dans le bois » et
+       léger halo esprit. Un strip VIDE (:empty, au repos) n'a donc ni fond, ni
+       bordure, ni ombre, ni padding → totalement invisible. Aucun asset externe. */
+    .ouija .spirit-reply:not(:empty) {
+      padding: .18rem .7rem;
       background: linear-gradient(180deg, rgba(10,6,3,.55), rgba(24,15,7,.45));
       border: 1px solid rgba(232,195,114,.35);
       border-radius: 8px;
       box-shadow: inset 0 1px 3px rgba(0,0,0,.6), 0 0 10px rgba(185,166,255,.08);
-      /* Fondu doux de toute la bande après 6 s (classe .fading posée par JS). */
-      opacity: 1;
-      transition: opacity 1.2s ease-out;
     }
     .ouija .spirit-reply.fading { opacity: 0; }
     /* Chaque lettre : gravée en or, masquée par défaut (scale 0 → invisible),
@@ -844,7 +872,7 @@
        neutralise déjà). */
     .ouija .planchette {
       position: absolute;
-      z-index: 1; /* au-dessus de .candles (z-index:0) */
+      z-index: 2; /* au-dessus des bougies (0) ET de la fenêtre de réponse (1) */
       top: 0; left: 0;
       /* Polish A (Req 3) : planchette semi-transparente (~85%) pour que les
          lettres voisines (ex. M et O autour de N) restent lisibles sous le
