@@ -1,0 +1,192 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test (Case B: space has no dedicated rest + Case A digit-row guard)": {
+      "status": "passed",
+      "failingExample": "Case B FAILS on unfixed code (expected — confirms the gap). Counterexamples:\n(1) Root cause: typeof Board.spacePosition === \"undefined\" (expected \"function\") — board.js exports no dedicated space rest helper, and Board.charIndex(\" \") === -1 (space is not an arc char).\n(2) Behavioral: spelling \"OLDEST ALPHA\" triggers 0 space-rest moves (expected 1). The oracle spell() loop computes idx = charIndex(\" \") = -1, skips movePlanchette, and there is no movePlanchetteToSpaceRest route — so the planchette stays on the previous glyph (\"T\") during the pause on the space. Same for \"3 SPIRITS\" (0 vs 1 expected).\nCase A PASSES on current markup: digit row is exactly [\"0\"..\"9\"], every glyph has its character, no 37th/extra glyph, no two digit centers coincide, digits stay within [DIGIT_ROW_X_START, DIGIT_ROW_X_END] at y = DIGIT_ROW_Y.",
+      "lastRunTimestamp": 1794079957378
+    },
+    "2. Write preservation property tests (BEFORE implementing fix)": {
+      "status": "passed",
+      "lastRunTimestamp": 1794080244891
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test (Case B: space has no dedicated rest + Case A digit-row guard)": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079817787
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079826622
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079994903
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079817976
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794080002047
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794080627498
+      }
+    ],
+    "3.1 Add the invisible space rest point to the pure core in `static/board.js`": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079818078
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794080636076
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794080911876
+      }
+    ],
+    "3.2 Add the DOM-adapter `movePlanchetteToSpaceRest()` in `createBoard` (`static/board.js`)": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079818176
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794080915635
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081050666
+      }
+    ],
+    "3.3 Route a space to the rest position in the oracle spelling loop (`static/oracle.js`)": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079818325
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081343474
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081523081
+      }
+    ],
+    "3.4 Confirm `templates/index.html` adds no space glyph (digit row stays exactly 0-9)": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079818469
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081527799
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081538400
+      }
+    ],
+    "3.5 Verify bug condition exploration test now passes (Fix Checking)": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079818556
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081543137
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081552647
+      }
+    ],
+    "3.6 Verify preservation tests still pass (Preservation Checking)": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079818656
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081557084
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081689708
+      }
+    ],
+    "4. (Conditional) Update the single allowed oracle test only if it asserts the old space behavior": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079818776
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081694362
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081709358
+      }
+    ],
+    "5. Checkpoint - Run the full Node + Python suites and confirm green": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794079819015
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081713634
+      },
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794082001386
+      }
+    ],
+    "3. Fix for the missing space rest position (and lock the digit-row-is-0-9 invariant)": [
+      {
+        "executionId": "383ad221-d0d8-432a-9673-d723c9bf9df7",
+        "chatSessionId": "sess_15b97e17-7548-4d9c-aa19-7fa83f362ecc",
+        "timestamp": 1794081689908
+      }
+    ]
+  }
+}

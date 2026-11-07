@@ -183,7 +183,18 @@
     DIGIT_COUNT: 10,
     DIGIT_ROW_Y: 300, // y constant, sous l'arc des lettres
     DIGIT_ROW_X_START: 120,
-    DIGIT_ROW_X_END: 580 // répartis uniformément sur la largeur du plateau
+    DIGIT_ROW_X_END: 580, // répartis uniformément sur la largeur du plateau
+    // --- Point de repos INVISIBLE de l'espace (ouija-space-glyph-digit-row) ---
+    // Lorsqu'une Oracle_Answer contient un espace, la planchette n'a aujourd'hui
+    // AUCUNE cible dédiée (charIndex(" ") === -1). On ajoute un point de repos
+    // invisible, proche du centre de l'arc et sous la bande des lettres : x au
+    // centre horizontal (= ARC_CENTER_X), y aligné sur le centre de l'arc /
+    // rangée des chiffres (= ARC_CENTER_Y = DIGIT_ROW_Y = 300), ce qui le place
+    // sous les lettres (qui chevauchent l'arc avec y <= DIGIT_ROW_Y) et à
+    // l'écart de tout glyphe visible. Aucun glyphe n'est jamais rendu pour ce
+    // point ; l'espace N'EST PAS ajouté à ARC_CHARS (charIndex(" ") reste -1).
+    SPACE_REST_X: 350, // = ARC_CENTER_X (centre horizontal)
+    SPACE_REST_Y: 300 // = ARC_CENTER_Y / DIGIT_ROW_Y, sous la bande des lettres
   });
 
   // arcAngle(index, count, g) : angle (radians) de la LETTRE située à `index`,
@@ -281,6 +292,32 @@
     return {
       x: (p.x / g.STAGE_W) * w,
       y: (p.y / g.STAGE_H) * h
+    };
+  }
+
+  // --- Cœur pur (ouija-space-glyph-digit-row) : repos de l'espace -----------
+  //
+  // spacePosition(width, height, g) : renvoie le point { x, y } du repos
+  // INVISIBLE de l'espace, projeté dans le box réel EXACTEMENT comme
+  // scaledArcPosition. On prend le point modèle { SPACE_REST_X, SPACE_REST_Y }
+  // (dans le repère STAGE_W×STAGE_H) et on le place à la MÊME fraction du box
+  // réel : x = (SPACE_REST_X / STAGE_W) * w, y = (SPACE_REST_Y / STAGE_H) * h.
+  // Comme SPACE_REST_X = ARC_CENTER_X = STAGE_W/2, x vaut exactement w/2 (centre
+  // horizontal) ; y tombe sous la bande des lettres, près du centre de l'arc.
+  //
+  // Mêmes gardes finitude/positivité que scaledArcPosition : si width/height ne
+  // sont pas des nombres finis strictement positifs, on retombe sur STAGE_W /
+  // STAGE_H. PURE, TOTALE, Node-safe : n'opère que sur des nombres, ne touche
+  // AUCUN DOM, ne lève jamais. `g` est optionnel (défaut `geom`) pour la
+  // testabilité, et ce point n'est PAS un index de l'arc — ARC_CHARS, charIndex,
+  // arcPosition et scaledArcPosition restent inchangés (charIndex(" ") === -1).
+  function spacePosition(width, height, g) {
+    g = g || geom;
+    var w = (typeof width === "number" && isFinite(width) && width > 0) ? width : g.STAGE_W;
+    var h = (typeof height === "number" && isFinite(height) && height > 0) ? height : g.STAGE_H;
+    return {
+      x: (g.SPACE_REST_X / g.STAGE_W) * w,
+      y: (g.SPACE_REST_Y / g.STAGE_H) * h
     };
   }
 
@@ -701,6 +738,61 @@
       movePlanchetteToElement(el);
     }
 
+    // movePlanchetteToSpaceRest() : CORRECTIF ouija-space-glyph-digit-row.
+    //
+    // Place le CENTRE de la fenêtre de la planchette sur le point de repos
+    // INVISIBLE de l'espace (spacePosition), utilisé par la boucle d'épellation
+    // de l'oracle quand un caractère est un espace (" "). Contrairement à
+    // movePlanchetteTo, on NE vise AUCUN button[data-char] et on NE crée AUCUN
+    // élément : la cible est un point calculé, pas un glyphe visible.
+    //
+    // Repère : spacePosition renvoie le point dans les coordonnées LOCALES du
+    // box réel du conteneur (origine en haut-gauche de root), EXACTEMENT comme
+    // scaledArcPosition/layoutGlyphs positionnent les glyphes via left/top. Le
+    // translate de la planchette est relatif à sa position absolue à l'origine
+    // du stage, comme les glyphes : on translate donc en (p.x - pw/2, p.y - ph/2)
+    // pour que le centre de la fenêtre atterrisse sur p — sans ajouter ni
+    // retrancher le rect écran de root.
+    //
+    // Gardé par la présence du DOM pour que `require()` sous Node reste sans
+    // effet de bord (planchette/root null → retour immédiat).
+    function movePlanchetteToSpaceRest() {
+      if (!planchette || !root) {
+        return;
+      }
+      // Largeur/hauteur réelles du box (mêmes gardes que layoutGlyphs).
+      var w = (typeof root.clientWidth === "number" && root.clientWidth > 0)
+        ? root.clientWidth
+        : geom.STAGE_W;
+      var h = (typeof root.clientHeight === "number" && root.clientHeight > 0)
+        ? root.clientHeight
+        : geom.STAGE_H;
+      var p = spacePosition(w, h);
+      // Demi-taille de la planchette : mesure réelle, fallback 96/2 (comme
+      // movePlanchetteToElement) si getBoundingClientRect est indisponible.
+      var pw = 96;
+      var ph = 96;
+      if (typeof planchette.getBoundingClientRect === "function") {
+        var pr = planchette.getBoundingClientRect();
+        if (pr && pr.width > 0) { pw = pr.width; }
+        if (pr && pr.height > 0) { ph = pr.height; }
+      }
+      var x = p.x - pw / 2;
+      var y = p.y - ph / 2;
+      if (planchette.style) {
+        planchette.style.transition = reduceMotion ? "none" : "";
+        planchette.style.transform = "translate(" + x + "px, " + y + "px)";
+      }
+      // Pas de glyphe cible pour le repos de l'espace : un redimensionnement ne
+      // doit pas tenter de re-viser un élément (layoutGlyphs + l'écouteur resize
+      // repositionnent déjà les glyphes ; le repos de l'espace n'est utilisé que
+      // transitoirement pendant l'épellation).
+      lastTargetEl = null;
+      // Notifie les abonnés (yeux de la mascotte) : spacePosition renvoie déjà
+      // le centre p dans le repère du conteneur, donc on passe (p.x, p.y, w, h).
+      notifyPlanchetteMove(p.x, p.y, w, h);
+    }
+
     // Repositionne la planchette sur le dernier caractère d'arc du Spelled_Name
     // courant. Si lastArcChar renvoie null (nom vide ou fin hors arc) →
     // charIndex(null) vaut -1 et movePlanchetteTo ne bouge pas (Req 3.4, 4.6,
@@ -838,6 +930,7 @@
       value: value,
       movePlanchetteTo: movePlanchetteTo,
       movePlanchetteToElement: movePlanchetteToElement,
+      movePlanchetteToSpaceRest: movePlanchetteToSpaceRest,
       layoutGlyphs: layoutGlyphs,
       onPlanchetteMove: onPlanchetteMove
     };
@@ -858,6 +951,7 @@
     arcAngle: arcAngle,
     arcPosition: arcPosition,
     scaledArcPosition: scaledArcPosition,
+    spacePosition: spacePosition,
     elementCenterInContainer: elementCenterInContainer,
     // Oracle_Board : cœur pur. Constantes + sanitiseur (tâche 1.1) puis
     // oldestTask, makeRng et oracleAnswer (tâche 1.2). Aucun export existant

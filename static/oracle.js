@@ -421,6 +421,15 @@
       }
     }
 
+    // moveToSpaceRest() : repos INVISIBLE de l'espace (ouija-space-glyph-digit-row).
+    // Garde identique à movePlanchette : no-op si le contrôleur n'expose pas la
+    // méthode (ancien contrôleur) — dégradation gracieuse, ne lève jamais.
+    function moveToSpaceRest() {
+      if (controller && typeof controller.movePlanchetteToSpaceRest === "function") {
+        controller.movePlanchetteToSpaceRest();
+      }
+    }
+
     // charIndexOf(ch) : index du caractère sur l'arc via le cœur pur (board.charIndex).
     // Repli -1 (aucun mouvement) si l'API pure est absente.
     function charIndexOf(ch) {
@@ -534,19 +543,26 @@
               return;
             }
             var ch = answer.charAt(i);
-            var idx = charIndexOf(ch);
-            if (idx >= 0) {
-              // Caractère d'arc : glissement via la géométrie existante (Req 4.2).
-              // La mascotte suit déjà la planchette (eye-following) via
-              // l'abonnement onPlanchetteMove du contrôleur.
-              movePlanchette(idx);
+            if (ch === " ") {
+              // Espace : repos INVISIBLE dédié (ouija-space-glyph-digit-row) au
+              // lieu de laisser la planchette sur le glyphe précédent. Toujours
+              // suivi de la pause (révélation du span + delay plus bas).
+              moveToSpaceRest();
+            } else {
+              var idx = charIndexOf(ch);
+              if (idx >= 0) {
+                // Caractère d'arc : glissement via la géométrie existante (Req 4.2).
+                // La mascotte suit déjà la planchette (eye-following) via
+                // l'abonnement onPlanchetteMove du contrôleur.
+                movePlanchette(idx);
+              }
             }
             // La lettre apparaît dans la bande AU MOMENT où la planchette
             // l'atteint, avec une brève lueur dorée (Req : reply strip).
             revealChar(replySpans[i]);
-            // Espace / caractère hors arc (idx < 0) : on laisse la planchette où
-            // elle est (Req 4.3) MAIS on marque quand même la pause pour un
-            // rythme naturel.
+            // Caractère hors arc non-espace (idx < 0) : on laisse la planchette
+            // où elle est (Req 4.3) MAIS on marque quand même la pause pour un
+            // rythme naturel. L'espace ci-dessus route vers le repos invisible.
             await delay(stepDelay); // pause sur chaque caractère (Req 4.1)
           }
           // d. En fin de boucle, la planchette repose sur le dernier glyphe
